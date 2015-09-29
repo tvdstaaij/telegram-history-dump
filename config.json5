@@ -1,0 +1,56 @@
+{
+
+  /* Backup targets
+   * Partial names are allowed, it doesn't have to be exact
+   * Empty array (the default) means "everything in this category"
+   */
+
+  // Array of user dialogs to backup
+  backup_users: [
+  ],
+
+  // Array of group dialogs to backup
+  backup_groups: [
+  ],
+
+  /* Output options */
+
+  // The dumper plugin (from dumpers directory) to use for formatting output
+  // Supported out of the box: 'json', 'plaintext'
+  dumper: 'json',
+
+  // Target directory for the backup files
+  // It his is a relative path it will be relative to the script's directory
+  backup_dir: './output',
+
+  // Maximum number of messages to backup for each target (0 means unlimited)
+  backlog_limit: 0,
+
+  // At the time of writing, telegram-cli does not properly detect audio/video
+  // These will be recognized as documents instead
+  // Stickers are also considered documents
+  download_media: {
+    photo: false,
+    document: false,
+    audio: false,
+    video: false,
+  },
+
+  // False to reference downloaded files in the telegram-cli cache
+  // True to copy downloaded media to a dedicated directory per dialog
+  copy_media: false,
+
+  /* Technical options */
+
+  // If this is not localhost telegram-cli must be invoked with --accept-any-tcp
+  tg_host: 'localhost',
+  // Should match the port passed to telegram-cli with the -P option
+  tg_port: 9009,
+
+  // Number of messages to request in one chunk
+  chunk_size: 100,
+
+  // Time in seconds to wait between requesting chunks
+  chunk_delay: 1.0,
+
+}
