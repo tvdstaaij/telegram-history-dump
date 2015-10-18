@@ -48,6 +48,18 @@
   // Beware: this will cause media files to be redownloaded every backup run
   delete_media: false,
 
+  /* Dumper options
+   * These options are specific to one or more dumpers, so depending on your
+   * dumper setting above some of these may not affect the backup at all
+   */
+
+  // Ruby strftime date specification to format dates with
+  // Used by plaintext dumper
+  date_format: '%Y-%m-%d %H:%M:%S',
+
+  // When a user's real name is formatted, include their last name if possible
+  display_last_name: true,
+
   /* Technical options */
 
   // If this is not localhost telegram-cli must be invoked with --accept-any-tcp
