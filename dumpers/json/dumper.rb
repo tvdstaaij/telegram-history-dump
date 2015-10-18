@@ -1,5 +1,5 @@
 require 'json'
-require_relative 'dumper_interface'
+require_relative '../dumper_interface'
 
 class JsonDumper < DumperInterface
 

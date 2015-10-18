@@ -3,20 +3,23 @@
   /* Backup targets
    * Partial names are allowed, it doesn't have to be exact
    * Empty array (the default) means "everything in this category"
+   * null or an array containing only null means "nothing in this category"
    */
 
   // Array of user dialogs to backup
   backup_users: [
+
   ],
 
   // Array of group dialogs to backup
   backup_groups: [
+
   ],
 
   /* Output options */
 
   // The dumper plugin (from dumpers directory) to use for formatting output
-  // Supported out of the box: 'json', 'plaintext'
+  // Supported out of the box: 'json', 'plaintext', 'bare'
   dumper: 'json',
 
   // Target directory for the backup files
@@ -40,6 +43,11 @@
   // True to copy downloaded media to a dedicated directory per dialog
   copy_media: false,
 
+  // True to delete media files from telegram-cli cache right after downloading
+  // Effectively turns copy_media into move_media
+  // Beware: this will cause media files to be redownloaded every backup run
+  delete_media: false,
+
   /* Technical options */
 
   // If this is not localhost telegram-cli must be invoked with --accept-any-tcp
@@ -52,5 +60,13 @@
 
   // Time in seconds to wait between requesting chunks
   chunk_delay: 1.0,
+
+  // Time in seconds to wait before considering a request stuck (0 = infinite)
+  chunk_timeout: 10,
+
+  // Time in seconds to wait before considering a download stuck (0 = infinite)
+  // Beware: setting this nonzero may cause a dialog backup to be canceled
+  // because of a large media file
+  media_timeout: 0,
 
 }
