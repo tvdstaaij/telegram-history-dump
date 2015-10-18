@@ -1,15 +1,18 @@
 require_relative '../lib/util'
 
 # To create a custom dumper:
-# * Create a .rb file in this directory
-# * Have it declare a class called Dumper, inheriting from DumperInterface
+# * Create a subdirectory in this directory named after your dumper
+# * Create a file called dumper.rb in the new directory
+# * Require this file: require_relative '../dumper_interface'
+# * Declare a class called Dumper, inheriting from DumperInterface
 # * Implement one or more of the functions listed below (at least dump_msg)
+
 # Notes:
 # * lib/util.rb exports some useful helpers. For example get_backup_dir returns
 #   the output basedir path
-# * The same Dumper instance will be used for all dialogs
+# * The same Dumper instance will be used for all dialogs in a backup session
 # * $config contains a hash of options parsed from config.json5
-#   (avoid relying on this if it isn't necessary)
+#   (which is possibly interesting for custom dumper-specific options)
 
 class DumperInterface
 
