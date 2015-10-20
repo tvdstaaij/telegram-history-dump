@@ -81,4 +81,9 @@
   // because of a large media file
   media_timeout: 0,
 
+  // Replacement string for the characters in dialog names which are potentially
+  // problematic in filenames
+  // You can set this to '' if the dialog names are unique enough
+  character_substitute: '_',
+
 }
