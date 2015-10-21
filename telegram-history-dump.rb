@@ -12,6 +12,9 @@ require 'json5'
 $VERBOSE = true
 
 require_relative 'lib/util'
+require_relative 'lib/cli_parser'
+
+cli_opts = CliParser.parse(ARGV)
 
 def connect_socket
   return if defined?($sock) && $sock
@@ -138,6 +141,7 @@ end
 
 $config = JSON5.parse(
     File.read(
+        cli_opts.cfgfile ||
         File.expand_path('../config.json5', __FILE__)
     )
 )
@@ -185,4 +189,8 @@ backup_list.each_with_index do |dialog,i|
 end
 
 $dumper.end_backup
+if cli_opts.kill_tg
+  connect_socket
+  $sock.puts('quit')
+end
 $log.info('Finished')
