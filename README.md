@@ -46,6 +46,18 @@ for linguistic / statistical analysis.
 You can also implement a custom dumper; see `dumpers/dumper_interface.rb` for
 details.
 
+## Command line options
+
+Most of the backup configuration is done through the config file, but a few
+specific options are available exclusively as CLI options.
+
+```text
+Usage: telegram-history-dump.rb [options]
+    -c, --config=cfgfile.json5       Path to configuration file
+    -k, --kill-tg                    Kill telegram-cli after backup
+    -h, --help                       Show help
+```
+
 ## Notes
 
 * It is possible to run telegram-cli on a different machine, e.g. as a daemon
