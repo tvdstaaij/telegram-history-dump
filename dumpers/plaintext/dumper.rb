@@ -20,7 +20,9 @@ class PlaintextDumper < DailyFileDumper
           when msg['text'].to_s != ''
             "#{from_name}: #{msg['text']}"
           when msg['media']
-            "#{from_name} sent #{msg['media']['type']}"
+            filename = msg['media']['file']
+            media_ref = filename ? ': %s' % filename : ''
+            "#{from_name} sent #{msg['media']['type']}#{media_ref}"
             # It would be possible to output more media-specific information
             # here, but I don't feel like it right now
           else nil
