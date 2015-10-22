@@ -9,12 +9,19 @@ class PisgDumper < DailyFileDumper
 
   def end_dialog(dialog)
     super
+
+    user_names = {}
+    @users.each do |user_id, user|
+      name = get_safe_name(get_full_name(user))
+      user_names[user_id] = name unless name == ''
+    end
+
     path = File.join(@output_dir, 'usermap.cfg')
     File.open(path, 'w') do |stream|
-      @users.each do |user_id, user|
-        name = get_safe_name(get_full_name(user))
-        next if name == ''
-        stream.puts('<user nick="%s" alias="u%d">' % [name, user_id])
+      user_names.each do |user_id, name|
+        is_duplicate = user_names.values.select{|v| v == name}.length > 1
+        unique_name = is_duplicate ? name + user_id.to_s : name
+        stream.puts('<user nick="%s" alias="u%d">' % [unique_name, user_id])
       end
     end
   end
