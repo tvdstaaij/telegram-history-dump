@@ -83,7 +83,7 @@ def process_media(dialog, msg)
     Timeout::timeout($config['media_timeout']) do
       begin
         response = exec_tg_command('load_' + media_type, msg['id'])
-      rescue RuntimeError => e
+      rescue StandardError => e
         $log.error('Failed to download media file: %s' % e)
         return
       end
@@ -99,7 +99,7 @@ def process_media(dialog, msg)
     end
     begin
       File.delete(response['result']) if $config['delete_media']
-    rescue RuntimeError => e
+    rescue StandardError => e
       $log.error('Failed to delete media file: %s' % e)
     end
     msg['media']['file'] = filename if filename
