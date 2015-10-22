@@ -2,8 +2,27 @@ require_relative '../daily_file_dumper'
 
 class PisgDumper < DailyFileDumper
 
+  def start_dialog(dialog)
+    super
+    @users = {}
+  end
+
+  def end_dialog(dialog)
+    super
+    path = File.join(@output_dir, 'usermap.cfg')
+    File.open(path, 'w') do |stream|
+      @users.each do |user_id, user|
+        name = get_safe_name(get_full_name(user))
+        next if name == ''
+        stream.puts('<user nick="%s" alias="u%d">' % [name, user_id])
+      end
+    end
+  end
+
   def dump_msg(dialog, msg)
     super
+    return unless msg['date']
+    @users[msg['from']['id']] = msg['from'] if msg['from']
     lines = msg['text'].to_s.split("\n")
     lines.push('') if lines.empty?
     lines.reverse_each do |msg_line|
