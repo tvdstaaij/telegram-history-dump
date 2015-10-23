@@ -16,17 +16,31 @@ class PlaintextDumper < DailyFileDumper
           from_name += ' (reply)'
           # Unfortunately finding out who the user was replying to is nontrivial
         end
-        case
+
+        content = case
           when msg['text'].to_s != ''
-            "#{from_name}: #{msg['text']}"
+            msg['text']
           when msg['media']
             filename = msg['media']['file']
             media_ref = filename ? ': %s' % filename : ''
-            "#{from_name} sent #{msg['media']['type']}#{media_ref}"
-            # It would be possible to output more media-specific information
+            "#{msg['media']['type']}#{media_ref}"
+            # It would be possible to include more media-specific information
             # here, but I don't feel like it right now
           else nil
         end
+
+        case
+          when content.nil?
+            nil
+          when dialog['type'] == 'channel'
+            content
+          when msg['text'].to_s != ''
+            "#{from_name}: #{content}"
+          when msg['media']
+            "#{from_name} sent #{content}"
+          else nil
+        end
+
       when 'service'
         user_name = get_full_name(msg['action']['user'])
         case msg['action']['type'].downcase

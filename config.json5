@@ -16,6 +16,11 @@
 
   ],
 
+  // Array of broadcast channels to backup
+  // Disabled by default because for the moment it will fail unless telegram-cli
+  // is built from their test branch (feature tested with tg revision c69f2a2)
+  backup_channels: null,
+
   /* Output options */
 
   // The dumper plugin (from dumpers directory) to use for formatting output

@@ -118,6 +118,7 @@ def backup_target?(dialog)
   candidates = case dialog['type']
     when 'user' then $config['backup_users']
     when 'chat' then $config['backup_groups']
+    when 'channel' then $config['backup_channels']
     else return false
   end
   return false unless candidates
@@ -155,7 +156,10 @@ $dumper = Dumper.new
 connect_socket
 
 dialogs = exec_tg_command('dialog_list')
-raise 'Expected array' unless dialogs.is_a?(Array)
+channels = $config['backup_channels'] ?
+  exec_tg_command('channel_list') : []
+raise 'Expected array' unless dialogs.is_a?(Array) && channels.is_a?(Array)
+dialogs = dialogs.concat(channels)
 raise 'No dialogs found' if dialogs.empty?
 backup_list = []
 skip_list = []
