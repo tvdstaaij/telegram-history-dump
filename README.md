@@ -60,6 +60,8 @@ Usage: telegram-history-dump.rb [options]
 
 ## Notes
 
+* Backing up [channels][6] is [possible][7] but it requires a [test build][8] of
+  telegram-cli until they merge this functionality into master.
 * It is possible to run telegram-cli on a different machine, e.g. as a daemon
   on a server. In this case you must pass `--accept-any-tcp` to telegram=cli and
   firewall the port appropriately to prevent unwanted exposure. Keep in mind
@@ -73,3 +75,6 @@ Usage: telegram-history-dump.rb [options]
 [3]: https://github.com/vysheng/tg
 [4]: http://bundler.io/
 [5]: http://jsonlines.org/
+[6]: https://telegram.org/blog/channels
+[7]: https://github.com/tvdstaaij/telegram-history-dump/issues/1
+[8]: https://github.com/vysheng/tg/tree/test
