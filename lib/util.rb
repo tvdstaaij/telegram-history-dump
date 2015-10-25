@@ -1,6 +1,5 @@
-def get_safe_name(dialog_name)
-  dialog_name.gsub(/([\/\\<>:"|?*]|[^\u0021-\uFFFF])/,
-                   $config['character_substitute'])
+def get_safe_name(name)
+  name.gsub(/([\/\\<>:"|?*]|[^\u0021-\uFFFF])/, $config['character_substitute'])
 end
 
 def get_full_name(user)
