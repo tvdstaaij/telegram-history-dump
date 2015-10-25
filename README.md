@@ -43,6 +43,9 @@ ordered from newest to oldest.
 `bare` outputs only the actual message texts without any context. It is meant
 for linguistic / statistical analysis.
 
+`pisg` creates daily logs compatible with the EnergyMech IRC logging format as
+input for the [PISG][9] chat statistics generator.
+
 You can also implement a custom dumper; see `dumpers/dumper_interface.rb` for
 details.
 
@@ -78,3 +81,4 @@ Usage: telegram-history-dump.rb [options]
 [6]: https://telegram.org/blog/channels
 [7]: https://github.com/tvdstaaij/telegram-history-dump/issues/1
 [8]: https://github.com/vysheng/tg/tree/test
+[9]: http://pisg.sourceforge.net/ 
