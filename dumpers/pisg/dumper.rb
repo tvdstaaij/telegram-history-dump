@@ -28,8 +28,9 @@ class PisgDumper < DailyFileDumper
 
   def dump_msg(dialog, msg)
     super
-    return unless msg['date']
-    @users[msg['from']['id']] = msg['from'] if msg['from']
+    return unless msg['date'] and msg['from']
+    return if msg['from']['print_name'].to_s == ''
+    @users[msg['from']['id']] = msg['from']
     lines = msg['text'].to_s.split("\n")
     lines.push('') if lines.empty?
     lines.reverse_each do |msg_line|
@@ -69,9 +70,7 @@ class PisgDumper < DailyFileDumper
   end
 
   def get_filename_for_date(dialog, date)
-    prefix = (dialog['type'].upcase == 'CHAT') ? '#' : ''
-    'Telegram_%s%s_%s.log' % [
-      prefix,
+    'Telegram_%s_%s.log' % [
       get_safe_name(dialog['print_name']),
       date.strftime('%Y%m%d')
     ]
