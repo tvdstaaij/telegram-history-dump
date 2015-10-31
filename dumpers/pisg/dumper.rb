@@ -47,12 +47,13 @@ class PisgDumper < DailyFileDumper
           "<#{user_ref}> #{msg_line}"
         else nil end
       when 'service'
-        target_ref = msg['action']['user'] ?
-          'u' + msg['action']['user']['id'].to_s : ''
+        target = msg['action']['user']
+        target_ref = target ? 'u' + target['id'].to_s : ''
         case msg['action']['type'].downcase
           when 'chat_add_user'
             "*** Joins: #{user_ref} (tg@#{user_ref}.users.telegram)"
           when 'chat_del_user'
+            return if target['print_name'].to_s == ''
             if target_ref == user_ref
               "*** Parts: #{user_ref} (tg@#{user_ref}.users.telegram)"
             else
