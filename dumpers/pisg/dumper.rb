@@ -13,15 +13,14 @@ class PisgDumper < DailyFileDumper
     user_names = {}
     @users.each do |user_id, user|
       name = get_safe_name(get_full_name(user))
-      user_names[user_id] = name unless name == ''
+      user_names[user_id] = name.capitalize unless name == ''
     end
+    deduplicate_names(user_names)
 
     path = File.join(@output_dir, 'usermap.cfg')
     File.open(path, 'w') do |stream|
       user_names.each do |user_id, name|
-        is_duplicate = user_names.values.select{|v| v == name}.length > 1
-        unique_name = is_duplicate ? name + user_id.to_s : name
-        stream.puts('<user nick="%s" alias="u%d">' % [unique_name, user_id])
+        stream.puts('<user nick="%s" alias="u%d">' % [name, user_id])
       end
     end
   end
@@ -76,6 +75,47 @@ class PisgDumper < DailyFileDumper
     ]
   end
 
+  def deduplicate_names(name_map)
+    names = name_map.values
+    dupes = names.select{|v| names.count(v) > 1 }.uniq
+    dupes.each do |dupe|
+      dupe_map = name_map.select{|_, v| v === dupe }
+
+      # Primary strategy: add initial letter of surname
+      surname_dedup = Hash[
+        dupe_map.keys.zip(
+          dupe_map.map do |user_id, name|
+            last_name = @users[user_id]['last_name']
+            next name if last_name.to_s.empty?
+            name + last_name[0].upcase
+          end
+        )
+      ]
+      next name_map.update(surname_dedup) unless has_dupes?(surname_dedup)
+
+      # Secondary strategy: counter suffix
+      suffix_num = 0
+      number_dedup = Hash[
+        dupe_map.keys.zip(
+          dupe_map.map do |_, name|
+            suffix_num += 1
+            suffix_num < 2 ? name : name + suffix_num.to_s
+          end
+        )
+      ]
+      next name_map.update(number_dedup) unless has_dupes?(number_dedup)
+
+      # Desperate fallback strategy: ID suffix
+      dupe_map.update(dupe_map){|user_id, name| name + user_id.to_s }
+      name_map.update(dupe_map)
+    end
+  end
+
+end
+
+def has_dupes?(collection)
+  values = collection.respond_to?('values') ? collection.values : collection
+  values != values.uniq
 end
 
 Dumper = PisgDumper
