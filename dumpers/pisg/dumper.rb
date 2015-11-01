@@ -1,3 +1,4 @@
+require 'time'
 require_relative '../daily_file_dumper'
 
 class PisgDumper < DailyFileDumper
@@ -5,6 +6,7 @@ class PisgDumper < DailyFileDumper
   def start_dialog(dialog)
     super
     @users = {}
+    @oldest_message_date = nil
   end
 
   def end_dialog(dialog)
@@ -23,12 +25,22 @@ class PisgDumper < DailyFileDumper
         stream.puts('<user nick="%s" alias="u%d">' % [name, user_id])
       end
     end
+
+    if dialog['title']
+      path = File.join(@output_dir, 'chat_title')
+      File.open(path, 'w') {|f| f.write(dialog['title']) }
+    end
+    if @oldest_message_date
+      path = File.join(@output_dir, 'oldest_message_date')
+      File.open(path, 'w') {|f| f.write(@oldest_message_date.utc.iso8601) }
+    end
   end
 
   def dump_msg(dialog, msg)
     super
     return unless msg['date'] and msg['from']
     return if msg['from']['print_name'].to_s == ''
+    @oldest_message_date = Time.at(msg['date'])
     @users[msg['from']['id']] = msg['from']
     lines = msg['text'].to_s.split("\n")
     lines.push('') if lines.empty?
