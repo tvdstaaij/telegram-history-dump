@@ -86,9 +86,15 @@
   // because of a large media file
   media_timeout: 0,
 
+  /* Even more options */
+
   // Replacement string for the characters in dialog names which are potentially
   // problematic in filenames
   // You can set this to '' if the dialog names are unique enough
   character_substitute: '_',
+
+  // Skip messages if their text matches this Ruby regex
+  // Example: '/forbidden|words/i'
+  filter_regex: null,
 
 }

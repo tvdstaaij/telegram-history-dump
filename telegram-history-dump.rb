@@ -44,6 +44,7 @@ def dump_dialog(dialog)
     FileUtils.mkdir_p(get_media_dir(dialog))
   end
   $dumper.start_dialog(dialog)
+  filter_regex = $config['filter_regex'] && eval($config['filter_regex'])
   offset = 0
   keep_dumping = true
   while keep_dumping do
@@ -60,8 +61,10 @@ def dump_dialog(dialog)
     raise 'Expected array' unless msg_chunk.is_a?(Array)
     msg_chunk.reverse_each do |msg|
       $log.warn('Message without date: %s' % msg) unless msg['date']
-      process_media(dialog, msg)
-      $dumper.dump_msg(dialog, msg)
+      unless msg['text'] && filter_regex && filter_regex =~ msg['text']
+        process_media(dialog, msg)
+        $dumper.dump_msg(dialog, msg)
+      end
       offset += 1
       if $config['backlog_limit'] > 0 && offset >= $config['backlog_limit']
         keep_dumping = false
