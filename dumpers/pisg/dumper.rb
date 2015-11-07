@@ -100,7 +100,7 @@ class PisgDumper < DailyFileDumper
           dupe_map.map do |user_id, name|
             last_name = @users[user_id]['last_name']
             next name if last_name.to_s.empty?
-            name + last_name[0].upcase
+            name + last_name.split(' ').last[0].upcase
           end
         )
       ]
