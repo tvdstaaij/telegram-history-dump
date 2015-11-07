@@ -128,8 +128,10 @@ def backup_target?(dialog)
   return true if candidates.empty?
   candidates.each do |candidate|
     next unless candidate
-    dialog_name = get_safe_name(dialog['print_name']).upcase
-    candidate_name = get_safe_name(candidate).upcase
+    dialog_name = strip_tg_special_chars(dialog['print_name'])
+    dialog_name = get_safe_name(dialog_name).upcase
+    candidate_name = strip_tg_special_chars(candidate)
+    candidate_name = get_safe_name(candidate_name).upcase
     return true if dialog_name.include?(candidate_name)
   end
   false

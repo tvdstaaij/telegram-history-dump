@@ -18,3 +18,7 @@ end
 def get_media_dir(dialog)
   File.join(get_backup_dir, get_safe_name(dialog['print_name']) + '_files')
 end
+
+def strip_tg_special_chars(print_name)
+  print_name.gsub(/[_@#]/, '')
+end
