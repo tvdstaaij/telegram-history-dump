@@ -5,12 +5,7 @@ require 'json'
 require 'socket'
 require 'logger'
 require 'timeout'
-
-# Load gems while interpreter warnings are disabled
-$VERBOSE = false
-require 'json5'
-$VERBOSE = true
-
+require 'yaml'
 require_relative 'lib/util'
 require_relative 'lib/cli_parser'
 
@@ -145,11 +140,9 @@ def format_dialog_list(dialogs)
     .join(', ')
 end
 
-$config = JSON5.parse(
-    File.read(
-        cli_opts.cfgfile ||
-        File.expand_path('../config.json5', __FILE__)
-    )
+$config = YAML.load_file(
+  cli_opts.cfgfile ||
+  File.expand_path('../config.yaml', __FILE__)
 )
 $log = Logger.new(STDOUT)
 

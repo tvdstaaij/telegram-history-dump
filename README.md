@@ -9,7 +9,7 @@ Compared to the old project, telegram-history-dump:
 * Has better support for media downloads
 * Supports output formats other than JSON and is extensible with custom dumpers
 * Does not depend on unstable Python/Lua bindings within telegram-cli
-* Has a separate [JSON5][2] formatted configuration file
+* Has a separate YAML formatted configuration file
 
 The default configuration will backup all dialogs to a directory named `output`,
 in JSON format, without downloading any media.
@@ -18,15 +18,10 @@ in JSON format, without downloading any media.
 
 1. Compile [telegram-cli][3], start it once to link your Telegram account
 2. Make sure Ruby 2+ is installed on your system: `ruby --version`
-3. Install gem dependencies with [Bundler][4], or manually with `gem`:
-
-  ```bash
-  gem install json5
-  ```
 
 ## Usage
 
-1. Configure your backup routine by editing `config.json5`
+1. Configure your backup routine by editing `config.yaml`
 2. Start telegram-cli with at least the following options:
    `telegram-cli --json -P 9009`
 3. Run the backup: `ruby telegram-history-dump.rb`
@@ -44,7 +39,7 @@ ordered from newest to oldest.
 for linguistic / statistical analysis.
 
 `pisg` creates daily logs compatible with the EnergyMech IRC logging format as
-input for the [PISG][9] chat statistics generator.
+input for the [PISG][9] chat statistics generator. Also see [telegram-pisg][2].
 
 You can also implement a custom dumper; see `dumpers/dumper_interface.rb` for
 details.
@@ -56,7 +51,7 @@ specific options are available exclusively as CLI options.
 
 ```text
 Usage: telegram-history-dump.rb [options]
-    -c, --config=cfgfile.json5       Path to configuration file
+    -c, --config=cfgfile.yaml        Path to configuration file
     -k, --kill-tg                    Kill telegram-cli after backup
     -h, --help                       Show help
 ```
@@ -74,7 +69,7 @@ Usage: telegram-history-dump.rb [options]
   to time out and force the script to skip part of a dump.
 
 [1]: https://github.com/tvdstaaij/telegram-json-backup
-[2]: http://json5.org/
+[2]: https://github.com/tvdstaaij/telegram-pisg
 [3]: https://github.com/vysheng/tg
 [4]: http://bundler.io/
 [5]: http://jsonlines.org/

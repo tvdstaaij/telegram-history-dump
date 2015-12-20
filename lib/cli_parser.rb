@@ -9,7 +9,7 @@ class CliParser
     opt_parser = OptionParser.new do |opts|
       opts.banner = "Usage: telegram-history-dump.rb [options]"
 
-      opts.on("-c", "--config=cfgfile.json5",
+      opts.on("-c", "--config=cfgfile.yaml",
               "Path to configuration file") do |str|
         args.cfgfile = str
       end

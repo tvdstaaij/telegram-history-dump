@@ -1,0 +1,97 @@
+---
+
+  ## Backup targets ##
+  #
+  # Partial names are allowed, it doesn't have to be exact
+  # Empty array (the default) means "everything in this category"
+  # null or an array containing only null means "nothing in this category"
+
+  # Array of user dialogs to backup
+  backup_users: [
+
+  ]
+  
+  # Array of group dialogs to backup
+  backup_groups: [
+  
+  ]
+  
+  # Array of broadcast channels to backup
+  # Disabled by default because for the moment it will fail unless telegram-cli
+  # is built from their test branch (feature tested with tg revision c69f2a2)
+  backup_channels: null
+
+
+  ## Output options ##
+
+  # The dumper plugin (from dumpers directory) to use for formatting output
+  # Supported out of the box: 'json', 'plaintext', 'bare'
+  dumper: 'json'
+
+  # Target directory for the backup files
+  # It his is a relative path it will be relative to the script's directory
+  backup_dir: './output'
+
+  # Maximum number of messages to backup for each target (0 means unlimited)
+  backlog_limit: 0
+
+  # At the time of writing, telegram-cli does not properly detect audio/video
+  # These will be recognized as documents instead
+  # Stickers are also considered documents
+  download_media:
+    photo: false
+    document: false
+    audio: false
+    video: false
+
+  # False to reference downloaded files in the telegram-cli cache
+  # True to copy downloaded media to a dedicated directory per dialog
+  copy_media: false
+
+  # True to delete media files from telegram-cli cache right after downloading
+  # Effectively turns copy_media into move_media
+  # Beware: this will cause media files to be redownloaded every backup run
+  delete_media: false
+
+  # Ruby strftime date specification to format dates with
+  # Used by plaintext dumper
+  date_format: '%Y-%m-%d %H:%M:%S'
+
+  # When a user's real name is formatted, include their last name if possible
+  display_last_name: true
+
+
+  ## Technical options ##
+
+  # Address of the machine you are running telegram-cli on
+  # If this is not localhost telegram-cli must be invoked with --accept-any-tcp
+  tg_host: 'localhost'
+
+  # Should match the port passed to telegram-cli with the -P option
+  tg_port: 9009
+
+  # Number of messages to request in one chunk
+  chunk_size: 100
+
+  # Time in seconds to wait between requesting chunks
+  chunk_delay: 1.0
+
+  # Time in seconds to wait before considering a request stuck (0 = infinite)
+  chunk_timeout: 10
+
+  # Time in seconds to wait before considering a download stuck (0 = infinite)
+  # Beware: setting this nonzero may cause a dialog backup to be canceled
+  # because of a large media file
+  media_timeout: 0
+
+
+  ## Even more options (obscure use cases, detailed preferences) ##
+
+  # Replacement string for the characters in dialog names which are potentially
+  # problematic in filenames
+  # You can set this to '' if the dialog names are unique enough
+  character_substitute: '_'
+
+  # Skip messages if their text matches this Ruby regex
+  # Example: '/forbidden|words/i'
+  filter_regex: null
