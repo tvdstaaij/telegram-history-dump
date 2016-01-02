@@ -182,18 +182,21 @@ FileUtils.mkdir_p(get_backup_dir)
 
 $progress = {}
 $progress_snapshot = {}
-progress_file = File.join(get_backup_dir, 'progress.json')
-progress_json = File.exists?(progress_file) ? File.read(progress_file) : '{}'
-progress_hash = JSON.parse(progress_json)
-if progress_hash['dumper'] && progress_hash['dumper'] != $config['dumper']
-  raise 'Dumper conflict: configured for "%s" but progress file reads "%s". '\
+if $config['track_progress']
+  progress_file = File.join(get_backup_dir, 'progress.json')
+  progress_json = File.exists?(progress_file) ? File.read(progress_file) : '{}'
+  progress_hash = JSON.parse(progress_json)
+  if progress_hash['dumper'] && progress_hash['dumper'] != $config['dumper']
+    raise 'Dumper conflict: configured for "%s" but progress file reads "%s". '\
    'Either use the same dumper or delete the output directory.'\
   % [progress_hash['dumper'], $config['dumper']]
+  end
+  (progress_hash['dialogs'] || {}).each do |k,v|
+    $progress[k] = DumpProgress.from_hash(v)
+    $progress_snapshot[k] = DumpProgress.from_hash(v)
+  end
 end
-(progress_hash['dialogs'] || {}).each do |k,v|
-  $progress[k] = DumpProgress.from_hash(v)
-  $progress_snapshot[k] = DumpProgress.from_hash(v)
-end
+
 
 $log.info('Loading dumper module \'%s\'' % $config['dumper'])
 require_relative 'dumpers/%s/dumper.rb' % $config['dumper']
@@ -237,13 +240,15 @@ backup_list.each_with_index do |dialog,i|
   end
 end
 
-$log.info('Saving progress file')
-progress_hash = {
-  :dumper => $config['dumper'],
-  :dialogs => $progress
-}
-progress_json = JSON.pretty_generate(progress_hash) + "\n"
-File.write(progress_file, progress_json)
+if $config['track_progress']
+  $log.info('Saving progress file')
+  progress_hash = {
+    :dumper => $config['dumper'],
+    :dialogs => $progress
+  }
+  progress_json = JSON.pretty_generate(progress_hash) + "\n"
+  File.write(progress_file, progress_json)
+end
 
 $dumper.end_backup
 if cli_opts.kill_tg

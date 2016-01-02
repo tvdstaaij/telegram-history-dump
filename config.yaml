@@ -84,7 +84,12 @@
   # because of a large media file
   media_timeout: 0
 
+
   ## Advanced behavior settings ##
+
+  # Setting this to true will record backup progress in a json file in the
+  # output directory, and use this to backup incrementally (only new messages)
+  track_progress: false
 
   # Replacement string for the characters in dialog names which are potentially
   # problematic in filenames
