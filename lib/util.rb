@@ -20,5 +20,5 @@ def get_media_dir(dialog)
 end
 
 def strip_tg_special_chars(print_name)
-  print_name.gsub(/[_@#]/, '')
+  print_name.gsub(/[_@# ]/, '')
 end
