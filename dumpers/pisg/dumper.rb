@@ -3,7 +3,7 @@ require_relative '../daily_file_dumper'
 
 class PisgDumper < DailyFileDumper
 
-  def start_dialog(dialog)
+  def start_dialog(dialog, progress)
     super
     @users = {}
     @oldest_message_date = nil
@@ -34,11 +34,13 @@ class PisgDumper < DailyFileDumper
       path = File.join(@output_dir, 'oldest_message_date')
       File.open(path, 'w') {|f| f.write(@oldest_message_date.utc.iso8601) }
     end
+
+    nil
   end
 
   def dump_msg(dialog, msg)
-    super
-    return unless msg['date'] and msg['from']
+    return unless super
+    return unless msg['from']
     return if msg['from']['print_name'].to_s == ''
     @oldest_message_date = Time.at(msg['date'])
     @users[msg['from']['id']] = msg['from']

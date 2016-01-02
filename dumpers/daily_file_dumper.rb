@@ -4,7 +4,7 @@ require_relative 'dumper_interface'
 
 class DailyFileDumper < DumperInterface
 
-  def start_dialog(dialog)
+  def start_dialog(dialog, progress)
     @prev_date = nil
     @output_buf = []
     safe_name = get_safe_name(dialog['print_name'])
@@ -14,13 +14,15 @@ class DailyFileDumper < DumperInterface
 
   def dump_msg(dialog, msg)
     date = msg['date']
-    return unless date
+    return false unless date
     date = Time.at(date).to_date
     flush(dialog) if date != @prev_date && !@output_buf.empty?
     @prev_date = date
+    true
   end
 
   def flush(dialog)
+    return if @output_buf.empty? || @prev_date.nil?
     filename = get_filename_for_date(dialog, @prev_date)
     path = File.join(@output_dir, filename)
     File.open(path, 'w') do |stream|
@@ -31,6 +33,7 @@ class DailyFileDumper < DumperInterface
 
   def end_dialog(dialog)
     flush(dialog)
+    nil
   end
 
   def get_filename_for_date(dialog, date)

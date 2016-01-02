@@ -1,21 +1,14 @@
 require 'json'
-require_relative '../dumper_interface'
+require_relative '../single_file_line_dumper'
 
-class JsonDumper < DumperInterface
-
-  def start_dialog(dialog)
-    safe_name = get_safe_name(dialog['print_name'])
-    outfile = File.join(get_backup_dir, safe_name + '.jsonl')
-    @stream = File.open(outfile, 'w')
-  end
+class JsonDumper < SingleFileLineDumper
 
   def dump_msg(dialog, msg)
     @stream.puts(JSON.generate(msg))
   end
 
-  def end_dialog(dialog)
-    @stream.close
-    @stream = nil
+  def get_file_extension
+    '.jsonl'
   end
 
 end

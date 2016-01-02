@@ -84,8 +84,7 @@
   # because of a large media file
   media_timeout: 0
 
-
-  ## Even more options (obscure use cases, detailed preferences) ##
+  ## Advanced behavior settings ##
 
   # Replacement string for the characters in dialog names which are potentially
   # problematic in filenames

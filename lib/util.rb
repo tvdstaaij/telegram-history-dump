@@ -1,3 +1,5 @@
+require_relative './dump_prepender'
+
 def get_safe_name(name)
   name.gsub(/([\/\\<>:"|?*]|[^\u0021-\uFFFF])/, $config['character_substitute'])
 end

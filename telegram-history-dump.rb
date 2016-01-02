@@ -2,12 +2,13 @@
 
 require 'fileutils'
 require 'json'
-require 'socket'
 require 'logger'
+require 'socket'
 require 'timeout'
 require 'yaml'
-require_relative 'lib/util'
 require_relative 'lib/cli_parser'
+require_relative 'lib/dump_progress'
+require_relative 'lib/util'
 
 cli_opts = CliParser.parse(ARGV)
 
@@ -38,7 +39,10 @@ def dump_dialog(dialog)
   if $config['download_media'].values.any? && $config['copy_media']
     FileUtils.mkdir_p(get_media_dir(dialog))
   end
-  $dumper.start_dialog(dialog)
+  id_str = dialog['id'].to_s
+  old_progress = $progress_snapshot[id_str] || DumpProgress.new
+  cur_progress = ($progress[id_str] ||= DumpProgress.new)
+  $dumper.start_dialog(dialog, old_progress)
   filter_regex = $config['filter_regex'] && eval($config['filter_regex'])
   offset = 0
   keep_dumping = true
@@ -55,11 +59,38 @@ def dump_dialog(dialog)
     end
     raise 'Expected array' unless msg_chunk.is_a?(Array)
     msg_chunk.reverse_each do |msg|
-      $log.warn('Message without date: %s' % msg) unless msg['date']
-      unless msg['text'] && filter_regex && filter_regex =~ msg['text']
-        process_media(dialog, msg)
-        $dumper.dump_msg(dialog, msg)
+      dump_msg = true
+      if msg['id']
+        cur_progress.bump_id(msg['id'])
+      else
+        $log.warn('Dropping message without id: %s' % msg)
+        dump_msg = false
       end
+      if msg['date']
+        cur_progress.bump_date(msg['date'])
+      else
+        $log.warn('Message without date: %s' % msg)
+      end
+
+      if msg['text'] && filter_regex && filter_regex =~ msg['text']
+        dump_msg = false
+      end
+
+      unless $dumper.msg_fresh?(msg, old_progress)
+        if keep_dumping
+          $log.info('Reached end of new messages since last backup')
+        end
+        dump_msg = false
+        keep_dumping = false
+      end
+
+      if dump_msg
+        process_media(dialog, msg)
+        if $dumper.dump_msg(dialog, msg) == false
+          keep_dumping = false
+        end
+      end
+
       offset += 1
       if $config['backlog_limit'] > 0 && offset >= $config['backlog_limit']
         keep_dumping = false
@@ -69,7 +100,8 @@ def dump_dialog(dialog)
     keep_dumping = false if msg_chunk.length < $config['chunk_size']
     sleep($config['chunk_delay']) if keep_dumping
   end
-  $dumper.end_dialog(dialog)
+  state = $dumper.end_dialog(dialog) || {}
+  cur_progress.dumper_state=(state)
 end
 
 def process_media(dialog, msg)
@@ -148,6 +180,21 @@ $log = Logger.new(STDOUT)
 
 FileUtils.mkdir_p(get_backup_dir)
 
+$progress = {}
+$progress_snapshot = {}
+progress_file = File.join(get_backup_dir, 'progress.json')
+progress_json = File.exists?(progress_file) ? File.read(progress_file) : '{}'
+progress_hash = JSON.parse(progress_json)
+if progress_hash['dumper'] && progress_hash['dumper'] != $config['dumper']
+  raise 'Dumper conflict: configured for "%s" but progress file reads "%s". '\
+   'Either use the same dumper or delete the output directory.'\
+  % [progress_hash['dumper'], $config['dumper']]
+end
+(progress_hash['dialogs'] || {}).each do |k,v|
+  $progress[k] = DumpProgress.from_hash(v)
+  $progress_snapshot[k] = DumpProgress.from_hash(v)
+end
+
 $log.info('Loading dumper module \'%s\'' % $config['dumper'])
 require_relative 'dumpers/%s/dumper.rb' % $config['dumper']
 $dumper = Dumper.new
@@ -189,6 +236,14 @@ backup_list.each_with_index do |dialog,i|
     disconnect_socket
   end
 end
+
+$log.info('Saving progress file')
+progress_hash = {
+  :dumper => $config['dumper'],
+  :dialogs => $progress
+}
+progress_json = JSON.pretty_generate(progress_hash) + "\n"
+File.write(progress_file, progress_json)
 
 $dumper.end_backup
 if cli_opts.kill_tg

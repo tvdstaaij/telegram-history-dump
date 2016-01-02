@@ -3,7 +3,7 @@ require_relative '../daily_file_dumper'
 class PlaintextDumper < DailyFileDumper
 
   def dump_msg(dialog, msg)
-    super
+    return unless super
     date_str = Time.at(msg['date']).strftime('[%s] ' % $config['date_format'])
     from_name = get_full_name(msg['from'])
 

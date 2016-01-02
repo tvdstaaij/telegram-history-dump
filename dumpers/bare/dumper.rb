@@ -1,20 +1,13 @@
-require_relative '../dumper_interface'
+require_relative '../single_file_line_dumper'
 
-class BareDumper < DumperInterface
-
-  def start_dialog(dialog)
-    safe_name = get_safe_name(dialog['print_name'])
-    outfile = File.join(get_backup_dir, safe_name + '.txt')
-    @stream = File.open(outfile, 'w')
-  end
+class BareDumper < SingleFileLineDumper
 
   def dump_msg(dialog, msg)
     @stream.puts(msg['text']) if msg['text']
   end
 
-  def end_dialog(dialog)
-    @stream.close
-    @stream = nil
+  def get_file_extension
+    '.txt'
   end
 
 end
