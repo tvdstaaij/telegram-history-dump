@@ -5,24 +5,27 @@ class PisgDumper < DailyFileDumper
 
   def start_dialog(dialog, progress)
     super
-    @users = {}
+    @new_users = {}
+    @old_users = progress.dumper_state['users'] || {}
+    @fresh_backup = progress.last_id.nil?
     @oldest_message_date = nil
   end
 
   def end_dialog(dialog)
-    super
+    state = super
 
+    all_users = @old_users.merge(@new_users)
     user_names = {}
-    @users.each do |user_id, user|
+    all_users.each do |user_id_str, user|
       name = get_safe_name(get_full_name(user))
-      user_names[user_id] = name.capitalize unless name == ''
+      user_names[user_id_str] = name.capitalize unless name == ''
     end
-    deduplicate_names(user_names)
+    deduplicate_names(user_names, all_users)
 
     path = File.join(@output_dir, 'usermap.cfg')
     File.open(path, 'w') do |stream|
-      user_names.each do |user_id, name|
-        stream.puts('<user nick="%s" alias="u%d">' % [name, user_id])
+      user_names.each do |user_id_str, name|
+        stream.puts('<user nick="%s" alias="u%s">' % [name, user_id_str])
       end
     end
 
@@ -30,12 +33,13 @@ class PisgDumper < DailyFileDumper
       path = File.join(@output_dir, 'chat_title')
       File.open(path, 'w') {|f| f.write(dialog['title']) }
     end
-    if @oldest_message_date
+    if @oldest_message_date and @fresh_backup
       path = File.join(@output_dir, 'oldest_message_date')
       File.open(path, 'w') {|f| f.write(@oldest_message_date.utc.iso8601) }
     end
 
-    nil
+    state['users'] = all_users
+    state
   end
 
   def dump_msg(dialog, msg)
@@ -43,7 +47,8 @@ class PisgDumper < DailyFileDumper
     return unless msg['from']
     return if msg['from']['print_name'].to_s == ''
     @oldest_message_date = Time.at(msg['date'])
-    @users[msg['from']['id']] = msg['from']
+    from_id_str = msg['from']['id'].to_s
+    @new_users[from_id_str] = msg['from'] unless @new_users[from_id_str]
     lines = msg['text'].to_s.split("\n")
     lines.push('') if lines.empty?
     lines.reverse_each do |msg_line|
@@ -90,7 +95,7 @@ class PisgDumper < DailyFileDumper
     ]
   end
 
-  def deduplicate_names(name_map)
+  def deduplicate_names(name_map, users)
     names = name_map.values
     dupes = names.select{|v| names.count(v) > 1 }.uniq
     dupes.each do |dupe|
@@ -99,8 +104,8 @@ class PisgDumper < DailyFileDumper
       # Primary strategy: add initial letter of surname
       surname_dedup = Hash[
         dupe_map.keys.zip(
-          dupe_map.map do |user_id, name|
-            last_name = @users[user_id]['last_name']
+          dupe_map.map do |user_id_str, name|
+            last_name = users[user_id_str]['last_name']
             next name if last_name.to_s.empty?
             name + last_name.split(' ').last[0].upcase
           end
@@ -121,7 +126,7 @@ class PisgDumper < DailyFileDumper
       next name_map.update(number_dedup) unless has_dupes?(number_dedup)
 
       # Desperate fallback strategy: ID suffix
-      dupe_map.update(dupe_map){|user_id, name| name + user_id.to_s }
+      dupe_map.update(dupe_map){|user_id_str, name| name + user_id_str }
       name_map.update(dupe_map)
     end
   end
