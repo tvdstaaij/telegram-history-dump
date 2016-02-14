@@ -1,3 +1,4 @@
+require 'pathname'
 require_relative './dump_prepender'
 
 def get_safe_name(name)
@@ -18,9 +19,13 @@ def get_backup_dir
 end
 
 def get_media_dir(dialog)
-  File.join(get_backup_dir, get_safe_name(dialog['print_name']) + '_files')
+  File.join(get_backup_dir, 'media', get_safe_name(dialog['print_name']))
 end
 
 def strip_tg_special_chars(print_name)
   print_name.gsub(/[_@# ]/, '')
+end
+
+def relativize_output_path(path)
+  Pathname(path).relative_path_from(Pathname(get_backup_dir)).to_s
 end

@@ -1,18 +1,15 @@
-require_relative '../lib/util'
+require_relative '../../lib/util'
 
-# To create a custom dumper:
-# * Create a subdirectory in this directory named after your dumper
-# * Create a file called dumper.rb in the new directory
-# * Require this file: require_relative '../dumper_interface'
-# * Declare a class called Dumper, inheriting from DumperInterface
+# To implement a dumper:
+# * Create a .rb file named after the dumper in 'dumpers'
+# * Require this file: require_relative 'lib/dumper_interface'
+# * Declare a class SomeDumper, inheriting from DumperInterface
 # * Implement one or more of the functions listed below (at least dump_msg)
 
-# Notes:
-# * lib/util.rb exports some useful helpers. For example get_backup_dir returns
-#   the output basedir path
-# * The same Dumper instance will be used for all dialogs in a backup session
-# * $config contains a hash of options parsed from the configuration file
-#   (which is possibly interesting for custom dumper-specific options)
+# Note:
+#   Dumpers are a low-level construct and as of v2.0.0 dumpers they are no
+#   longer used for custom output formats. Instead, custom formatters have been
+#   introduced for this purpose.
 
 class DumperInterface
 
@@ -58,6 +55,12 @@ class DumperInterface
   # Can be used for cleanup
   def end_backup
     nil
+  end
+
+  # Should return a string that uniquely identifies this dumper type
+  # This is used as a subdirectory name in the output directory
+  def get_output_type
+    'unnamed_dump_type'
   end
 
 end

@@ -24,9 +24,14 @@
 
   ## Output options ##
 
-  # The dumper plugin (from dumpers directory) to use for formatting output
-  # Supported out of the box: 'json', 'plaintext', 'bare'
-  dumper: 'json'
+  # Formatters export the JSON output to a different format
+  # To enable a formatter, uncomment it along with all of its options
+  # If no formatters are enabled, only JSON files are produced
+  formatters:
+  #  plaintext:
+  #    date_format: '%Y-%m-%d %H:%M:%S'
+  #  bare:
+  #  pisg:
 
   # Target directory for the backup files
   # It his is a relative path it will be relative to the script's directory
@@ -52,10 +57,6 @@
   # Effectively turns copy_media into move_media
   # Beware: this will cause media files to be redownloaded every backup run
   delete_media: false
-
-  # Ruby strftime date specification to format dates with
-  # Used by plaintext dumper
-  date_format: '%Y-%m-%d %H:%M:%S'
 
   # When a user's real name is formatted, include their last name if possible
   display_last_name: true
@@ -87,9 +88,9 @@
 
   ## Advanced behavior settings ##
 
-  # Setting this to true will record backup progress in a json file in the
-  # output directory, and use this to backup incrementally (only new messages)
-  track_progress: false
+  # Enables incremental backups (progress is tracked in <outdir>/progress.json)
+  # Setting this to false will force a complete re-run of the backup every time
+  track_progress: true
 
   # Replacement string for the characters in dialog names which are potentially
   # problematic in filenames

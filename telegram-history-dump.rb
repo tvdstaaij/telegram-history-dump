@@ -6,9 +6,12 @@ require 'logger'
 require 'socket'
 require 'timeout'
 require 'yaml'
+require_relative 'dumpers/json'
+require_relative 'formatters/lib/formatter_base'
 require_relative 'lib/cli_parser'
 require_relative 'lib/dump_progress'
 require_relative 'lib/util'
+Dir[File.dirname(__FILE__) + '/formatters/*.rb'].each {|file| require file }
 
 cli_opts = CliParser.parse(ARGV)
 
@@ -180,16 +183,17 @@ $log = Logger.new(STDOUT)
 
 FileUtils.mkdir_p(get_backup_dir)
 
+$dumper = JsonDumper.new
 $progress = {}
 $progress_snapshot = {}
 if $config['track_progress']
   progress_file = File.join(get_backup_dir, 'progress.json')
   progress_json = File.exists?(progress_file) ? File.read(progress_file) : '{}'
   progress_hash = JSON.parse(progress_json)
-  if progress_hash['dumper'] && progress_hash['dumper'] != $config['dumper']
-    raise 'Dumper conflict: configured for "%s" but progress file reads "%s". '\
-   'Either use the same dumper or delete the output directory.'\
-  % [progress_hash['dumper'], $config['dumper']]
+  if progress_hash['dumper'] &&
+     progress_hash['dumper'] != $dumper.get_output_type
+    raise 'Dumper conflict: using "%s" but progress file reads "%s". '\
+  % [$dumper.get_output_type, progress_hash['dumper']]
   end
   (progress_hash['dialogs'] || {}).each do |k,v|
     $progress[k] = DumpProgress.from_hash(v)
@@ -198,9 +202,18 @@ if $config['track_progress']
 end
 
 
-$log.info('Loading dumper module \'%s\'' % $config['dumper'])
-require_relative 'dumpers/%s/dumper.rb' % $config['dumper']
-$dumper = Dumper.new
+formatter_classes = {}
+enabled_formatters = []
+FormatterBase.descendants.each do |formatter_class|
+  formatter_classes[formatter_class::NAME] = formatter_class
+end
+($config['formatters'] || {}).each do |name,options|
+  unless formatter_classes.key?(name)
+    raise 'Formatter "%s" is enabled but does not exist' % [name]
+  end
+  enabled_formatters.push(formatter_classes[name].new(options || {}))
+end
+
 connect_socket
 
 dialogs = exec_tg_command('dialog_list')
@@ -243,14 +256,34 @@ end
 if $config['track_progress']
   $log.info('Saving progress file')
   progress_hash = {
-    :dumper => $config['dumper'],
+    :dumper => $dumper.get_output_type,
+    :last_modified => DateTime.now.new_offset(0).iso8601,
     :dialogs => $progress
   }
   progress_json = JSON.pretty_generate(progress_hash) + "\n"
   File.write(progress_file, progress_json)
 end
-
 $dumper.end_backup
+
+$log.info('Formatting messages') unless enabled_formatters.empty?
+enabled_formatters.each do |formatter|
+  formatter.start_backup(backup_list)
+end
+backup_list.each do |dialog|
+  dialog_progress = $progress[dialog['id'].to_s]
+  json_file = File.join(get_backup_dir, dialog_progress.dumper_state['outfile'])
+  messages = []
+  File.open(json_file, 'r:UTF-8').each do |line|
+    messages.push(JSON.parse(line))
+  end
+  enabled_formatters.each do |formatter|
+    formatter.format_dialog(dialog, messages)
+  end
+end
+enabled_formatters.each do |formatter|
+  formatter.end_backup
+end
+
 if cli_opts.kill_tg
   connect_socket
   $sock.puts('quit')

@@ -1,5 +1,5 @@
 require 'json'
-require_relative '../single_file_line_dumper'
+require_relative 'lib/single_file_line_dumper'
 
 class JsonDumper < SingleFileLineDumper
 
@@ -9,6 +9,10 @@ class JsonDumper < SingleFileLineDumper
 
   def get_file_extension
     '.jsonl'
+  end
+
+  def get_output_type
+    'json'
   end
 
 end
