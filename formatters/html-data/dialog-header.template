@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<meta charset="utf-8">
+		<title>%s</title>
+		<link rel=stylesheet href="telegram-history-dump.css">
+	</head>
+	<body>
+		<div class='dialog-info'>
+			<a href="index.html">Back to index</a>
+		</div>
+		<h1>%s</h1>

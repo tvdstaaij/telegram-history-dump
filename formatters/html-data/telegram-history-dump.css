@@ -1,0 +1,68 @@
+body {
+	width: 700px;
+	margin: 0 auto 0 auto;
+}
+
+.msg {
+	box-sizing: border-box;
+	float: left;
+	width: auto;
+	max-width: 80%;
+	position: relative;
+	clear: both;
+
+	background: #dcebfe;
+	background-image: linear-gradient(bottom, #bee2ff 15%%, #dcebfe 100%%);
+	border: solid 1px rgba(0,0,0,0.5);
+	border-radius: 20px;
+	box-shadow: inset 0 8px 5px rgba(255,255,255,0.65), 0 1px 2px rgba(0,0,0,0.2);
+
+	margin-bottom: 10px;
+	padding: 6px 20px;
+	word-wrap: break-word;
+}
+
+.msg:before, .msg:after {
+	border-radius: 20px / 5px;
+	content: '';
+	display: block;
+	position: absolute;
+}
+.msg:before {
+	border: 10px solid transparent;
+	border-bottom-color: rgba(0,0,0,0.5);
+	bottom: 0px;
+	left: -7px;
+	z-index: -2;
+}
+.msg:after {
+	border: 8px solid transparent;
+	border-bottom-color: #bee2ff;
+	bottom: 1px;
+	left: -5px;
+}
+
+.out {
+	float: right;
+	background: #bcf6a6;
+	background-image: linear-gradient(bottom, #bee2ff 15%%, #bcf6a6 100%%);
+}
+.out:before {
+	left: auto;
+	right: -7px;
+}
+.out:after {
+	left: auto;
+	right: -5px;
+
+	border-bottom-color: #d9ffbe;
+}
+
+.dialog-info {
+	margin-top: 15px;
+}
+
+.navigation {
+	clear: both;
+}
+
