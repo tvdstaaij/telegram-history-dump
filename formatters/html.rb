@@ -52,40 +52,44 @@ class HtmlFormatter < FormatterBase
         end
 
         date = Time.at(msg['date'])
-		if $config['formatters']['html']['use_utc_time']
-		  date = "#{date.utc} UTC"
-		end
+        if $config['formatters']['html']['use_utc_time']
+          date = "#{date.utc} UTC"
+        end
 
         file.puts("<div class='msg %s' title='#{date}'>#{author} %s</div>" % [(msg['out'] ? 'out' : 'in'), CGI::escapeHTML(msg['text'])])
       else
         # TODO: media
       end
 
-	  message_count += 1
-	  if message_count > $config['formatters']['html']['paginate']
-		# We reached our message limit on this page; paginate!
-		# Is there a previous page? If yes, link to it.
-		navigation = ''
-		if page_count > 0
-		  navigation += '<a class=prevpage href="%s">Previous page</a>' % current_filename
-		end
+      message_count += 1
+      if message_count > $config['formatters']['html']['paginate']
+        # We reached our message limit on this page; paginate!
+        # Is there a previous page? If yes, link to it.
+        navigation = ''
+        if page_count > 0
+          navigation += '<a class=prevpage href="%s">Previous page</a>' % current_filename
+        end
 
-		page_count += 1
-		message_count = 0
+        page_count += 1
+        message_count = 0
 
-		# Link to the next page and end the file
-		current_filename = File.join(output_dir, "#{safe_name}-%s.html" % page_count)
-		navigation += '<a class=nextpage href="%s">Next page</a>' % current_filename
-		file.puts(@html_template_footer % navigation)
-		file.close()
+        # Link to the next page and end the file
+        current_filename = File.join(output_dir, "#{safe_name}-%s.html" % page_count)
+        navigation += '<a class=nextpage href="%s">Next page</a>' % current_filename
+        file.puts(@html_template_footer % navigation)
+        file.close()
 
-		# Open a new file and write the header again
-		file = File.open(current_filename, 'w:UTF-8')
-		file.puts(@html_template_header % [CGI::escapeHTML(dialog['print_name']), dialog_title + (' - page %i' % (page_count + 1) if page_count > 0)])
-	  end
+        # Open a new file and write the header again
+        file = File.open(current_filename, 'w:UTF-8')
+        file.puts(@html_template_header % [CGI::escapeHTML(dialog['print_name']), dialog_title + (' - page %i' % (page_count + 1) if page_count > 0)])
+      end
     end
     file.puts(@html_template_footer % '')
-	file.close()
+    file.close()
+  end
+
+  def end_backup
+    $log.info("HTML export finished, see: output/formatted/html/index.html")
   end
 
 end
