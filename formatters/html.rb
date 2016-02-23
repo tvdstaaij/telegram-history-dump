@@ -17,13 +17,12 @@ class HtmlFormatter < FormatterBase
     dialog_list_html = ''
     dialogs.each do |dialog|
       safe_name = get_safe_name(dialog['print_name'])
-      # ToDo: replace 'Chat with' and 'Group chat' with icons
       if dialog['type'] != 'user'
-        dialog_title = 'Group chat: %s' % CGI::escapeHTML(dialog['print_name'])
+        dialog_rendering = '<span class="icon img-group"></span>'
       else
-        dialog_title = 'Chat with: %s' % CGI::escapeHTML(dialog['print_name'])
+        dialog_rendering = '<span class="icon img-single-user"></span>'
       end
-      dialog_list_html += '<div class="dialog"><a href="%s-0.html">%s</a></div>' % [safe_name, dialog_title]
+      dialog_list_html += "<div class='dialog msg %s'>#{dialog_rendering} <a href='#{safe_name}-0.html'>%s</a></div>" % [('out' if dialog['type'] == 'user'), CGI::escapeHTML(dialog['print_name'])]
     end
     index_file = File.join(output_dir, 'index.html')
     File.open(index_file, 'w:UTF-8') do |stream|
@@ -35,7 +34,7 @@ class HtmlFormatter < FormatterBase
     if dialog['type'] != 'user'
       dialog_title = 'Group chat: %s' % CGI::escapeHTML(dialog['print_name'])
     else
-      dialog_title = 'Chat with: %s' % CGI::escapeHTML(dialog['print_name'])
+      dialog_title = 'Chat with %s' % CGI::escapeHTML(dialog['print_name'])
     end
     safe_name = get_safe_name(dialog['print_name'])
     current_filename = File.join(output_dir, safe_name + '-0.html')
@@ -47,7 +46,7 @@ class HtmlFormatter < FormatterBase
     messages.reverse_each do |msg|
       if msg['text']
         if not msg['out'] and dialog['type'] != 'user'
-          author = '<div class=author>%s</div>'% msg['from']['print_name']
+          author = '<div class=author>%s:</div>'% msg['from']['print_name']
         else
           author = ''
         end
@@ -57,7 +56,7 @@ class HtmlFormatter < FormatterBase
 		  date = "#{date.utc} UTC"
 		end
 
-        file.puts('<div class="msg %s" title="%s">%s%s</div>' % [(msg['out'] ? 'out' : 'in'), date, author, CGI::escapeHTML(msg['text'])])
+        file.puts("<div class='msg %s' title='#{date}'>#{author} %s</div>" % [(msg['out'] ? 'out' : 'in'), CGI::escapeHTML(msg['text'])])
       else
         # TODO: media
       end
@@ -82,7 +81,7 @@ class HtmlFormatter < FormatterBase
 
 		# Open a new file and write the header again
 		file = File.open(current_filename, 'w:UTF-8')
-		file.puts(@html_template_header % [CGI::escapeHTML(dialog['print_name']), ('Page %i' % (page_count + 1) if page_count > 0), dialog_title])
+		file.puts(@html_template_header % [CGI::escapeHTML(dialog['print_name']), dialog_title + (' - page %i' % (page_count + 1) if page_count > 0)])
 	  end
     end
     file.puts(@html_template_footer % '')

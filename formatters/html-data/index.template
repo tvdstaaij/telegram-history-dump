@@ -3,7 +3,7 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Telegram History Dump</title>
-		<link rel=stylesheet src="telegram-history-dump.css">
+		<link rel=stylesheet href="telegram-history-dump.css">
 	</head>
 	<body>
 		%s
