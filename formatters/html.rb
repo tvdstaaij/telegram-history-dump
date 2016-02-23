@@ -62,7 +62,8 @@ class HtmlFormatter < FormatterBase
       end
 
       message_count += 1
-      if message_count > $config['formatters']['html']['paginate']
+	  messages_per_page = $config['formatters']['html']['paginate']
+      if messages_per_page and message_count > messages_per_page and messages_per_page > 0
         # We reached our message limit on this page; paginate!
         # Is there a previous page? If yes, link to it.
         navigation = ''
