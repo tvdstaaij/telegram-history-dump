@@ -96,3 +96,8 @@ body {
 	color: #666152;
 }
 
+.msg img, .msg video {
+	max-width: 525px;
+	max-height: 500px;
+}
+
