@@ -18,13 +18,15 @@ class HtmlFormatter < FormatterBase
     dialog_list_html = ''
     dialogs.each do |dialog|
       safe_name = get_safe_name(dialog['print_name'])
+      title = safe_name
       html_safe_url = CGI::escapeHTML(URI.escape(safe_name))
       if dialog['type'] != 'user'
         dialog_rendering = '<span class="icon img-group"></span>'
+        title = dialog['title']
       else
         dialog_rendering = '<span class="icon img-single-user"></span>'
       end
-      dialog_list_html += "<div class='dialog msg %s'>#{dialog_rendering} <a href='%s-0.html'>%s</a></div>" % [('out' if dialog['type'] == 'user'), html_safe_url, CGI::escapeHTML(dialog['print_name'])]
+      dialog_list_html += "<div class='dialog msg %s'>#{dialog_rendering} <a href='%s-0.html'>%s</a></div>" % [('out' if dialog['type'] == 'user'), html_safe_url, CGI::escapeHTML(title)]
     end
     index_file = File.join(output_dir, 'index.html')
     File.open(index_file, 'w:UTF-8') do |stream|
@@ -34,14 +36,16 @@ class HtmlFormatter < FormatterBase
 
   def format_dialog(dialog, messages)
     if dialog['type'] != 'user'
-      dialog_title = 'Group chat: %s' % CGI::escapeHTML(dialog['print_name'])
+      dialog_title = 'Group chat: %s' % CGI::escapeHTML(dialog['title'])
+      html_title = CGI::escapeHTML(dialog['title'])
     else
       dialog_title = 'Chat with %s' % CGI::escapeHTML(dialog['print_name'])
+      html_title = CGI::escapeHTML(dialog['print_name'])
     end
     safe_name = get_safe_name(dialog['print_name'])
     current_filename = File.join(output_dir, safe_name + '-0.html')
     backup_file = File.open(current_filename, 'w:UTF-8')
-    backup_file.puts(@html_template_header % [CGI::escapeHTML(dialog['print_name']), dialog_title])
+    backup_file.puts(@html_template_header % [html_title, dialog_title])
 
     message_count = 0
     page_count = 0
@@ -158,7 +162,7 @@ class HtmlFormatter < FormatterBase
 
         # Open a new file and write the header again
         backup_file = File.open(current_filename, 'w:UTF-8')
-        backup_file.puts(@html_template_header % [CGI::escapeHTML(dialog['print_name']), dialog_title + (' - page %i' % (page_count + 1) if page_count > 0)])
+        backup_file.puts(@html_template_header % [html_title, dialog_title + (' - page %i' % (page_count + 1) if page_count > 0)])
       end
     end
     backup_file.puts(@html_template_footer % '')
