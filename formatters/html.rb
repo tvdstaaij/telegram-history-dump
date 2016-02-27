@@ -144,7 +144,7 @@ class HtmlFormatter < FormatterBase
         # Is there a previous page? If yes, link to it.
         navigation = ''
         if page_count > 0
-          navigation += '<a class=prevpage href="%s">Previous page</a>' % CGI::escapeHTML(URI.escape(safe_name))
+          navigation += '<a class=prevpage href="%s-%s.html">Previous page</a>' % [CGI::escapeHTML(URI.escape(safe_name)), page_count]
         end
 
         page_count += 1
@@ -152,7 +152,7 @@ class HtmlFormatter < FormatterBase
 
         # Link to the next page and end the file
         current_filename = File.join(output_dir, "%s-%s.html" % [CGI::escapeHTML(URI.escape(safe_name)), page_count])
-        navigation += '<a class=nextpage href="%s">Next page</a>' % current_filename
+        navigation += '<a class=nextpage href="%s">Next page</a>' % File.basename(current_filename)
         backup_file.puts(@html_template_footer % navigation)
         backup_file.close()
 
