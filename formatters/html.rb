@@ -57,9 +57,13 @@ class HtmlFormatter < FormatterBase
         author = ''
       end
 
-      date = Time.at(msg['date'])
-      if $config['formatters']['html']['use_utc_time']
-        date = "#{date.utc} UTC"
+      if msg['date']
+        date = Time.at(msg['date'])
+        if $config['formatters']['html']['use_utc_time']
+          date = "#{date.utc} UTC"
+        end
+      else
+        date = 'Unknown'
       end
 
       msg_body = ''
