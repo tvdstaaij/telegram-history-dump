@@ -35,6 +35,9 @@ class HtmlFormatter < FormatterBase
   end
 
   def format_dialog(dialog, messages)
+    message_count = 0
+    page_count = 0
+
     if dialog['type'] != 'user'
       dialog_title = 'Group chat: %s' % CGI::escapeHTML(dialog['title'])
       html_title = CGI::escapeHTML(dialog['title'])
@@ -43,12 +46,16 @@ class HtmlFormatter < FormatterBase
       html_title = CGI::escapeHTML(dialog['print_name'])
     end
     safe_name = get_safe_name(dialog['print_name'])
+    escaped_name = CGI::escapeHTML(URI.escape(safe_name))
     current_filename = File.join(output_dir, safe_name + '-0.html')
-    backup_file = File.open(current_filename, 'w:UTF-8')
-    backup_file.puts(@html_template_header % [html_title, dialog_title])
 
-    message_count = 0
-    page_count = 0
+    backup_file = File.open(current_filename, 'w:UTF-8')
+    navigation = pagination(escaped_name, page_count, messages.length)
+    backup_file.puts(@html_template_header % [html_title, navigation, dialog_title])
+
+    timestamps_every = $config['formatters']['html']['timestamps_every'].to_i
+    messages_per_page = $config['formatters']['html']['paginate']
+
     messages.reverse_each do |msg|
       if not msg['out'] and dialog['type'] != 'user'
         # If this is an incoming message in a group chat, display the author
@@ -118,25 +125,30 @@ class HtmlFormatter < FormatterBase
         first = msg['media']['first_name']
         last = msg['media']['last_name']
         msg_body = "<div class=contact>Contact: #{first} <!--first-last-->#{last}, +#{phone}</div>"
-      elsif msg['event'] == 'service' or msg['service']
-        if get_full_name(msg['from']) != '' # Some messages have no properly filled 'from'
-          text = CGI::escapeHTML(get_full_name(msg['from']))
+      end
+      if msg['event'] == 'service' or msg['service'] or (message_count % timestamps_every == 0 and timestamps_every > 0)
+        if message_count % timestamps_every == 0
+          text = date.strftime('%a %Y-%m-%d, %H:%I')
         else
-          text = '(Unknown user)'
-        end
-        text += ' '
-        if msg['action']['type'] == 'chat_add_user'
-          text += "added %s" % CGI::escapeHTML(get_full_name(msg['action']['user']))
-        elsif msg['action']['type'] == 'chat_rename'
-          text += "changed group name to &laquo;%s&raquo;" % CGI::escapeHTML(msg['action']['title'])
-        elsif msg['action']['type'] == 'chat_change_photo'
-          text += "updated group photo"
-        elsif msg['action']['type'] == 'chat_created'
-          text += "created group &laquo;%s&raquo;" % CGI::escapeHTML(msg['action']['title'])
-        elsif msg['action']['type'] == 'chat_del_user'
-          text += "removed %s" % CGI::escapeHTML(get_full_name(msg['action']['user']))
-        else
-            text += CGI::escapeHTML(msg['action'].to_s)
+          if get_full_name(msg['from']) != '' # Some messages have no properly filled 'from'
+            text = CGI::escapeHTML(get_full_name(msg['from']))
+          else
+            text = '(Unknown user)'
+          end
+          text += ' '
+          if msg['action']['type'] == 'chat_add_user'
+            text += "added %s" % CGI::escapeHTML(get_full_name(msg['action']['user']))
+          elsif msg['action']['type'] == 'chat_rename'
+            text += "changed group name to &laquo;%s&raquo;" % CGI::escapeHTML(msg['action']['title'])
+          elsif msg['action']['type'] == 'chat_change_photo'
+            text += "updated group photo"
+          elsif msg['action']['type'] == 'chat_created'
+            text += "created group &laquo;%s&raquo;" % CGI::escapeHTML(msg['action']['title'])
+          elsif msg['action']['type'] == 'chat_del_user'
+            text += "removed %s" % CGI::escapeHTML(get_full_name(msg['action']['user']))
+          else
+              text += CGI::escapeHTML(msg['action'].to_s)
+          end
         end
         backup_file.puts("<div class='msg-service' title='#{date}'><div class=inner>#{text}</div></div>")
       end
@@ -146,35 +158,46 @@ class HtmlFormatter < FormatterBase
       end
 
       message_count += 1
-      messages_per_page = $config['formatters']['html']['paginate']
       if messages_per_page and messages_per_page > 0 and message_count > messages_per_page
         # We reached our message limit on this page; paginate!
-        # Is there a previous page? If yes, link to it.
-        navigation = ''
-        if page_count > 0
-          navigation += '<a class=prevpage href="%s-%s.html">Previous page</a>' % [CGI::escapeHTML(URI.escape(safe_name)), page_count]
-        end
+
+        navigation = pagination(escaped_name, page_count, messages.length)
+        backup_file.puts(@html_template_footer % navigation)
+        backup_file.close()
 
         page_count += 1
         message_count = 0
 
-        # Link to the next page and end the file
-        current_filename = File.join(output_dir, "%s-%s.html" % [CGI::escapeHTML(URI.escape(safe_name)), page_count])
-        navigation += '<a class=nextpage href="%s">Next page</a>' % File.basename(current_filename)
-        backup_file.puts(@html_template_footer % navigation)
-        backup_file.close()
-
         # Open a new file and write the header again
+        current_filename = File.join(output_dir, "%s-%s.html" % [escaped_name, page_count])
         backup_file = File.open(current_filename, 'w:UTF-8')
-        backup_file.puts(@html_template_header % [html_title, dialog_title + (' - page %i' % (page_count + 1) if page_count > 0)])
+        navigation = pagination(escaped_name, page_count, messages.length)
+        backup_file.puts(@html_template_header % [html_title, navigation, dialog_title + (' - page %i' % (page_count + 1) if page_count > 0)])
       end
     end
-    backup_file.puts(@html_template_footer % '')
+    navigation = pagination(escaped_name, page_count, messages.length)
+    backup_file.puts(@html_template_footer % navigation)
     backup_file.close()
   end
 
   def end_backup
     $log.info("HTML export finished, see: output/formatted/html/index.html")
+  end
+
+  def pagination(escaped_name, current_page, total_messages)
+    messages_per_page = $config['formatters']['html']['paginate']
+    total_pages = (total_messages / messages_per_page).ceil
+
+    navigation = ''
+    navigation += "<a href='%s-0.html'>First</a> | " % escaped_name if current_page > 1
+    navigation += "<a href='%s-%s.html'>3 back</a> | " % [escaped_name, current_page - 3] if current_page > 5
+    navigation += "<a href='%s-%s.html'>Previous</a> | " % [escaped_name, current_page - 1] if current_page > 0
+    navigation += "Page #{current_page + 1} | "
+    navigation += "<a href='%s-%s.html'>Next</a> | " % [escaped_name, current_page + 1] if current_page < total_pages - 3
+    navigation += "<a href='%s-%s.html'>3 forward</a> | " % [escaped_name, current_page + 3] if current_page + 5 < total_pages - 1
+    navigation += "<a href='%s-%s.html'>Last</a> |" % [escaped_name, total_pages - 3] if current_page < total_pages - 4
+
+    return navigation
   end
 
   def replace_urls(text)

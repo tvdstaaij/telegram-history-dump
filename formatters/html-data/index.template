@@ -6,6 +6,7 @@
 		<link rel=stylesheet href="telegram-history-dump.css">
 	</head>
 	<body>
+		<h1>Telegram History Dump</h1>
 		%s
 	</body>
 </html>

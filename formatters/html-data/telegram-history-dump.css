@@ -1,6 +1,6 @@
 body {
 	width: 700px;
-	margin: 0 auto 0 auto;
+	margin: 15px auto 150px auto;
 }
 
 .msg {
@@ -68,10 +68,6 @@ body {
 	display: inline-block;
 }
 
-.dialog-info {
-	margin-top: 15px;
-}
-
 .navigation {
 	clear: both;
 }
@@ -118,5 +114,10 @@ body {
 	padding: 5px;
 	display: inline-block;
 	border-radius: 6px;
+}
+
+.navigation-bottom {
+	clear: both;
+	padding-top: 15px;
 }
 
