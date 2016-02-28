@@ -12,10 +12,14 @@ class BareFormatter < FormatterBase
   def format_dialog(dialog, messages)
     safe_name = get_safe_name(dialog['print_name'])
     output_file = File.join(output_dir, safe_name + '.txt')
-    File.open(output_file, 'w:UTF-8') do |stream|
-      messages.reverse_each do |msg|
-        stream.puts(msg['text']) if msg['text']
+    begin
+      File.open(output_file, 'w:UTF-8') do |stream|
+        messages.reverse_each do |msg|
+          stream.puts(msg['text']) if msg['text']
+        end
       end
+    rescue StandardError => e
+      $log.error('Failed to write output file: %s' % e)
     end
   end
 
