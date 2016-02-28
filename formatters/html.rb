@@ -238,7 +238,7 @@ class HtmlFormatter < FormatterBase
 
     # TODO: IP addresses. IPv6 addresses. I completely forgot about those.
 
-    urls = text.scan(/(^|\s|<)(([a-zA-Z]{1,25}:)?([^@\s]{1,200}@)?(\/\/)?([a-zA-Z][a-zA-Z0-9-]{0,63}\.){0,125}[a-zA-Z][a-zA-Z0-9-]{0,63}\.([a-zA-Z]{2,63}|xn--[a-zA-Z0-9]{1,60})(:[1-9][0-9]{0,4})?(\/[!-~]*)?(\s|>|$|\)|\.))/)
+    urls = text.scan(/(^|\s|<)(([a-zA-Z]{1,25}:)?([^@\s]{1,200}@)?(\/\/)?([0-9a-zA-Z][a-zA-Z0-9-]{0,63}\.){0,125}[a-zA-Z][a-zA-Z0-9-]{0,63}\.([a-zA-Z]{2,63}|xn--[a-zA-Z0-9]{1,60})(:[1-9][0-9]{0,4})?(\/[!-~]*)?(\s|>|$|\)|\.))/)
 
     text = CGI::escapeHTML(text)
 
