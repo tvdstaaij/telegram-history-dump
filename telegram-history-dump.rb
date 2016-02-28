@@ -188,7 +188,8 @@ $progress = {}
 $progress_snapshot = {}
 if $config['track_progress']
   progress_file = File.join(get_backup_dir, 'progress.json')
-  progress_json = File.exists?(progress_file) ? File.read(progress_file) : '{}'
+  progress_json = File.exists?(progress_file) ?
+    File.read(progress_file, :encoding => 'UTF-8') : '{}'
   progress_hash = JSON.parse(progress_json)
   if progress_hash['dumper'] &&
      progress_hash['dumper'] != $dumper.get_output_type
@@ -201,11 +202,12 @@ if $config['track_progress']
   end
 end
 
-
 formatter_classes = {}
 enabled_formatters = []
 FormatterBase.descendants.each do |formatter_class|
-  formatter_classes[formatter_class::NAME] = formatter_class
+  unless formatter_class::NAME.empty?
+    formatter_classes[formatter_class::NAME] = formatter_class
+  end
 end
 ($config['formatters'] || {}).each do |name,options|
   unless formatter_classes.key?(name)

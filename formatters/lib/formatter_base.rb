@@ -15,7 +15,7 @@ class FormatterBase
 
   # Canonical name of the formatter, should match the filename and class name
   # Will be used to determine the output directory (output/formatted/<name>)
-  NAME = 'anonymous_formatter'
+  NAME = ''
 
   # Will be called before formatting the first dialog
   # Can be used for initialization
@@ -45,6 +45,12 @@ class FormatterBase
     @options = options
   end
 
+  # Class method descendants will give every formatter that implements this base
+  @@formatters = []
+  def self.descendants
+    @@formatters
+  end
+
   protected
 
   # If the formatter outputs files (likely), this gives the directory where they
@@ -57,10 +63,8 @@ class FormatterBase
   private
 
   # Mechanism to automatically detect which formatters are implemented
-  class << self; attr_accessor :descendants end
-  @descendants = []
   def self.inherited(child_class)
-    @descendants.push(child_class)
+    @@formatters.push(child_class)
   end
 
 end
