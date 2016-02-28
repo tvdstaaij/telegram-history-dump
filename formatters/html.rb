@@ -176,7 +176,7 @@ class HtmlFormatter < FormatterBase
         message_count = 0
 
         # Open a new file and write the header again
-        current_filename = File.join(output_dir, "%s-%s.html" % [escaped_name, page_count])
+        current_filename = File.join(output_dir, "%s-%s.html" % [safe_name, page_count])
         backup_file = File.open(current_filename, 'w:UTF-8')
         navigation = pagination(escaped_name, page_count, messages.length)
         backup_file.puts(@html_template_header % [html_title, navigation, dialog_title + (' - page %i' % (page_count + 1) if page_count > 0)])
