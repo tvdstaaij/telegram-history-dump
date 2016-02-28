@@ -70,14 +70,14 @@ class HtmlFormatter < FormatterBase
 
       if msg['date']
         date = Time.at(msg['date'])
-		date_message = date.strftime('%a %Y-%m-%d, %H:%I')
+        date_message = date.strftime('%a %Y-%m-%d, %H:%I')
         if $config['formatters']['html']['use_utc_time']
-		  date_message = date.utc.strftime('%a %Y-%m-%d, %H:%I') + " UTC"
+          date_message = date.utc.strftime('%a %Y-%m-%d, %H:%I') + " UTC"
           date = "#{date.utc} UTC"
         end
       else
         date = 'Unknown'
-		date_message = ''
+        date_message = ''
       end
 
       msg_body = ''
@@ -194,8 +194,8 @@ class HtmlFormatter < FormatterBase
   def pagination(escaped_name, current_page, total_messages)
     messages_per_page = $config['formatters']['html']['paginate'].to_i
     if messages_per_page == 0
-	  return ''
-	end
+      return ''
+    end
     total_pages = (total_messages / messages_per_page).ceil
 
     navigation = ' | '
