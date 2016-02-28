@@ -6,5 +6,5 @@
 		<link rel=stylesheet href="telegram-history-dump.css">
 	</head>
 	<body>
-		<div class='navigation-top'><a href="index.html">Back to index</a> | %s</div>
+		<div class='navigation-top'><a href="index.html">Back to index</a>%s</div>
 		<h1>%s</h1>

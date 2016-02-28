@@ -193,9 +193,12 @@ class HtmlFormatter < FormatterBase
 
   def pagination(escaped_name, current_page, total_messages)
     messages_per_page = $config['formatters']['html']['paginate']
+    if messages_per_page == 0
+	  return ''
+	end
     total_pages = (total_messages / messages_per_page).ceil
 
-    navigation = ''
+    navigation = ' | '
     navigation += "<a href='%s-0.html'>First</a> | " % escaped_name if current_page > 1
     navigation += "<a href='%s-%s.html'>3 back</a> | " % [escaped_name, current_page - 3] if current_page > 5
     navigation += "<a href='%s-%s.html'>Previous</a> | " % [escaped_name, current_page - 1] if current_page > 0
