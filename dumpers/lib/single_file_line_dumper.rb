@@ -4,6 +4,7 @@ require_relative 'dumper_interface'
 class SingleFileLineDumper < DumperInterface
 
   def start_dialog(dialog, progress)
+    @prepender = nil
     @state = progress.dumper_state ? progress.dumper_state.clone : {}
     output_file = @state['outfile']
     if output_file
