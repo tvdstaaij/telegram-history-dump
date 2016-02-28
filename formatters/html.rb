@@ -58,7 +58,7 @@ class HtmlFormatter < FormatterBase
     backup_file.puts(@html_template_header % [html_title, navigation, dialog_title])
 
     timestamps_every = $config['formatters']['html']['timestamps_every'].to_i
-    messages_per_page = $config['formatters']['html']['paginate']
+    messages_per_page = $config['formatters']['html']['paginate'].to_i
 
     messages.reverse_each do |msg|
       if not msg['out'] and dialog['type'] != 'user'
@@ -192,7 +192,7 @@ class HtmlFormatter < FormatterBase
   end
 
   def pagination(escaped_name, current_page, total_messages)
-    messages_per_page = $config['formatters']['html']['paginate']
+    messages_per_page = $config['formatters']['html']['paginate'].to_i
     if messages_per_page == 0
 	  return ''
 	end
