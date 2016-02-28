@@ -196,16 +196,17 @@ class HtmlFormatter < FormatterBase
     if messages_per_page == 0
       return ''
     end
-    total_pages = (total_messages / messages_per_page).ceil
+    total_pages = (total_messages.to_f / messages_per_page).ceil
+	last_page = total_pages - 1
 
     navigation = ' | '
     navigation += "<a href='%s-0.html'>First</a> | " % escaped_name if current_page > 1
-    navigation += "<a href='%s-%s.html'>3 back</a> | " % [escaped_name, current_page - 3] if current_page > 5
+    navigation += "<a href='%s-%s.html'>3 back</a> | " % [escaped_name, current_page - 3] if current_page > 4
     navigation += "<a href='%s-%s.html'>Previous</a> | " % [escaped_name, current_page - 1] if current_page > 0
     navigation += "Page #{current_page + 1} | "
-    navigation += "<a href='%s-%s.html'>Next</a> | " % [escaped_name, current_page + 1] if current_page < total_pages - 3
-    navigation += "<a href='%s-%s.html'>3 forward</a> | " % [escaped_name, current_page + 3] if current_page + 5 < total_pages - 1
-    navigation += "<a href='%s-%s.html'>Last</a> |" % [escaped_name, total_pages - 3] if current_page < total_pages - 4
+    navigation += "<a href='%s-%s.html'>Next</a> | " % [escaped_name, current_page + 1] if current_page < last_page
+    navigation += "<a href='%s-%s.html'>3 forward</a> | " % [escaped_name, current_page + 3] if current_page + 4 < last_page
+    navigation += "<a href='%s-%s.html'>Last</a> |" % [escaped_name, last_page] if current_page < last_page - 1
 
     return navigation
   end
