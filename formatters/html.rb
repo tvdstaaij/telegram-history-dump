@@ -7,6 +7,10 @@ class HtmlFormatter < FormatterBase
   NAME = 'html'
 
   def start_backup(dialogs)
+    if not $config['copy_media'] or not $config['download_media'] or not $config['download_media']['document'] or not $config['download_media']['photo']
+      $log.warn('Config options "copy_media" or "download_media.document|photo|..." not enabled. HTML dump might be missing images and/or files.')
+    end
+
     FileUtils.remove_dir(output_dir, true)
     FileUtils.mkdir_p(output_dir)
     FileUtils.cp('formatters/html-data/telegram-history-dump.css', output_dir)
@@ -66,11 +70,14 @@ class HtmlFormatter < FormatterBase
 
       if msg['date']
         date = Time.at(msg['date'])
+		date_message = date.strftime('%a %Y-%m-%d, %H:%I')
         if $config['formatters']['html']['use_utc_time']
+		  date_message = date.utc.strftime('%a %Y-%m-%d, %H:%I') + " UTC"
           date = "#{date.utc} UTC"
         end
       else
         date = 'Unknown'
+		date_message = ''
       end
 
       msg_body = ''
@@ -128,7 +135,7 @@ class HtmlFormatter < FormatterBase
       end
       if msg['event'] == 'service' or msg['service'] or (message_count % timestamps_every == 0 and timestamps_every > 0)
         if message_count % timestamps_every == 0
-          text = date.strftime('%a %Y-%m-%d, %H:%I')
+          text = date_message
         else
           if get_full_name(msg['from']) != '' # Some messages have no properly filled 'from'
             text = CGI::escapeHTML(get_full_name(msg['from']))
@@ -150,7 +157,7 @@ class HtmlFormatter < FormatterBase
               text += CGI::escapeHTML(msg['action'].to_s)
           end
         end
-        backup_file.puts("<div class='msg-service' title='#{date}'><div class=inner>#{text}</div></div>")
+        backup_file.puts("<div class='msg-service' title='#{date}'><div class=inner>#{text}</div></div>") if text != ''
       end
       if msg_body != ''
         in_out = (msg['out'] ? 'out' : 'in')
@@ -158,7 +165,7 @@ class HtmlFormatter < FormatterBase
       end
 
       message_count += 1
-      if messages_per_page and messages_per_page > 0 and message_count > messages_per_page
+      if messages_per_page and messages_per_page > 0 and message_count >= messages_per_page
         # We reached our message limit on this page; paginate!
 
         navigation = pagination(escaped_name, page_count, messages.length)
@@ -181,7 +188,7 @@ class HtmlFormatter < FormatterBase
   end
 
   def end_backup
-    $log.info("HTML export finished, see: output/formatted/html/index.html")
+    $log.info('HTML export finished, see: output/formatted/html/index.html')
   end
 
   def pagination(escaped_name, current_page, total_messages)
