@@ -205,7 +205,9 @@ end
 formatter_classes = {}
 enabled_formatters = []
 FormatterBase.descendants.each do |formatter_class|
-  formatter_classes[formatter_class::NAME] = formatter_class
+  unless formatter_class::NAME.empty?
+    formatter_classes[formatter_class::NAME] = formatter_class
+  end
 end
 ($config['formatters'] || {}).each do |name,options|
   unless formatter_classes.key?(name)
