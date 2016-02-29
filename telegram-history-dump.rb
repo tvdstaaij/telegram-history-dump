@@ -11,7 +11,10 @@ require_relative 'formatters/lib/formatter_base'
 require_relative 'lib/cli_parser'
 require_relative 'lib/dump_progress'
 require_relative 'lib/util'
-Dir[File.dirname(__FILE__) + '/formatters/*.rb'].each {|file| require file }
+
+Dir[File.dirname(__FILE__) + '/formatters/*.rb'].each do |file|
+  require File.expand_path(file)
+end
 
 cli_opts = CliParser.parse(ARGV)
 
