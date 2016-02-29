@@ -1,0 +1,12 @@
+<!DOCTYPE html>
+<html>
+  <head>
+  	<meta charset="utf-8">
+  	<title>Telegram History Dump</title>
+  	<link rel=stylesheet href="telegram-history-dump.css">
+  </head>
+  <body>
+  	<h1>Telegram History Dump</h1>
+  	%s
+  </body>
+</html>
