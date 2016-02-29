@@ -197,7 +197,7 @@ class HtmlFormatter < FormatterBase
       return ''
     end
     total_pages = (total_messages.to_f / messages_per_page).ceil
-	last_page = total_pages - 1
+    last_page = total_pages - 1
 
     navigation = ' | '
     navigation += "<a href='%s-0.html'>First</a> | " % escaped_name if current_page > 1
