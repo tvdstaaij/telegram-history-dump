@@ -13,11 +13,11 @@ class HtmlFormatter < FormatterBase
 
     FileUtils.remove_dir(output_dir, true)
     FileUtils.mkdir_p(output_dir)
-    FileUtils.cp('formatters/html-data/telegram-history-dump.css', output_dir)
+    FileUtils.cp(File.expand_path('../html-data/telegram-history-dump.css', __FILE__), output_dir)
 
-    @html_template_index = File.read('formatters/html-data/index.template')
-    @html_template_header = File.read('formatters/html-data/dialog-header.template')
-    @html_template_footer = File.read('formatters/html-data/dialog-footer.template')
+    @html_template_index = File.read(File.expand_path('../html-data/index.template', __FILE__))
+    @html_template_header = File.read(File.expand_path('../html-data/dialog-header.template', __FILE__))
+    @html_template_footer = File.read(File.expand_path('../html-data/dialog-footer.template', __FILE__))
 
     dialog_list_html = ''
     dialogs.each do |dialog|
