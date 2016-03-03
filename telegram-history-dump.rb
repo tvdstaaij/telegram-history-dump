@@ -178,6 +178,17 @@ def format_dialog_list(dialogs)
     .join(', ')
 end
 
+def save_progress
+  return unless $config['track_progress']
+  progress_hash = {
+    :dumper => $dumper.get_output_type,
+    :last_modified => DateTime.now.new_offset(0).iso8601,
+    :dialogs => $progress
+  }
+  progress_json = JSON.pretty_generate(progress_hash) + "\n"
+  File.write($progress_file, progress_json)
+end
+
 $config = YAML.load_file(
   cli_opts.cfgfile ||
   File.expand_path('../config.yaml', __FILE__)
@@ -190,14 +201,14 @@ $dumper = JsonDumper.new
 $progress = {}
 $progress_snapshot = {}
 if $config['track_progress']
-  progress_file = File.join(get_backup_dir, 'progress.json')
-  progress_json = File.exists?(progress_file) ?
-    File.read(progress_file, :encoding => 'UTF-8') : '{}'
+  $progress_file = File.join(get_backup_dir, 'progress.json')
+  progress_json = File.exists?($progress_file) ?
+    File.read($progress_file, :encoding => 'UTF-8') : '{}'
   progress_hash = JSON.parse(progress_json)
   if progress_hash['dumper'] &&
      progress_hash['dumper'] != $dumper.get_output_type
     raise 'Dumper conflict: using "%s" but progress file reads "%s". '\
-  % [$dumper.get_output_type, progress_hash['dumper']]
+      % [$dumper.get_output_type, progress_hash['dumper']]
   end
   (progress_hash['dialogs'] || {}).each do |k,v|
     $progress[k] = DumpProgress.from_hash(v)
@@ -252,21 +263,11 @@ backup_list.each_with_index do |dialog,i|
   begin
     connect_socket
     dump_dialog(dialog)
+    save_progress
   rescue Timeout::Error
     $log.error('Command timeout, skipping to next dialog')
     disconnect_socket
   end
-end
-
-if $config['track_progress']
-  $log.info('Saving progress file')
-  progress_hash = {
-    :dumper => $dumper.get_output_type,
-    :last_modified => DateTime.now.new_offset(0).iso8601,
-    :dialogs => $progress
-  }
-  progress_json = JSON.pretty_generate(progress_hash) + "\n"
-  File.write(progress_file, progress_json)
 end
 $dumper.end_backup
 
