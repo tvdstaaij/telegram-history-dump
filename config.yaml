@@ -32,6 +32,10 @@
   #    date_format: '%Y-%m-%d %H:%M:%S'
   #  bare:
   #  pisg:
+  #  html:
+  #    paginate: 1500 # messages per page
+  #    use_utc_time: false
+  #    timestamps_every: 50 # messages
 
   # Target directory for the backup files
   # It his is a relative path it will be relative to the script's directory
