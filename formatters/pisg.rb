@@ -21,7 +21,7 @@ class PisgFormatter < DailyFileFormatter
     path = File.join(@dialog_dir, 'usermap.cfg')
     File.open(path, 'w:UTF-8') do |stream|
       user_names.each do |user_id, name|
-        stream.puts('<user nick="%s" alias="u%d">' % [name, user_id])
+        stream.puts('<user nick="%s" alias="u%s">' % [name, user_id.to_s])
       end
     end
 

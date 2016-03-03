@@ -243,6 +243,11 @@ skip_list = []
 dialogs.each do |dialog|
   next if dialog['print_name'].nil?
   next if dialog['print_name'].empty?
+
+  # Compatibility with upcoming tg version (1.4)
+  dialog['id'] = dialog['peer_id'] if dialog.key?('peer_id')
+  dialog['type'] = dialog['peer_type'] if dialog.key?('peer_type')
+
   if backup_target?(dialog)
     backup_list.push(dialog)
   else
