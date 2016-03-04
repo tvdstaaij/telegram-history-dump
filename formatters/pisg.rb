@@ -40,7 +40,7 @@ class PisgFormatter < DailyFileFormatter
   def format_message(dialog, message, output_stream)
     return unless message['date'] and message['from']
     return if message['from']['print_name'].to_s == ''
-    @oldest_message_date = Time.at(message['date'])
+    @oldest_message_date ||= Time.at(message['date'])
     @users[message['from']['id']] = message['from']
     lines = message['text'].to_s.split("\n")
     lines.push('') if lines.empty?
