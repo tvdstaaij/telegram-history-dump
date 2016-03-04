@@ -80,9 +80,9 @@ Usage notes:
 
 Telegram-cli issues known to affect telegram-history-dump:
 
-* vysheng/tg#947 can cause crashes when dumping channels with more than 100
+* [vysheng/tg#947][9] can cause crashes when dumping channels with more than 100
   messages.
-* vysheng/tg#904 can cause crashes when dialogs contain certain media files.
+* [vysheng/tg#904][10] can cause crashes when dialogs contain certain media files.
   If you get this, recompile telegram-cli with the suggested workaround. 
 
 [1]: https://github.com/tvdstaaij/telegram-json-backup
@@ -93,3 +93,5 @@ Telegram-cli issues known to affect telegram-history-dump:
 [6]: https://telegram.org/blog/channels
 [7]: http://pisg.sourceforge.net/
 [8]: https://github.com/vysheng/tg/tree/test
+[9]: https://github.com/vysheng/tg/issues/947
+[10]: https://github.com/vysheng/tg/issues/904
