@@ -133,8 +133,8 @@ class HtmlFormatter < FormatterBase
         last = msg['media']['last_name']
         msg_body = "<div class=contact>Contact: #{first} <!--first-last-->#{last}, +#{phone}</div>"
       end
-      if msg['event'] == 'service' or msg['service'] or (message_count % timestamps_every == 0 and timestamps_every > 0)
-        if message_count % timestamps_every == 0
+      if msg['event'] == 'service' or msg['service'] or (timestamps_every > 0 and message_count % timestamps_every == 0)
+        if timestamps_every > 0 and message_count % timestamps_every == 0
           text = date_message
         else
           if get_full_name(msg['from']) != '' # Some messages have no properly filled 'from'
