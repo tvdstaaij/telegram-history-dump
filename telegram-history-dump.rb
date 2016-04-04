@@ -241,12 +241,16 @@ raise 'No dialogs found' if dialogs.empty?
 backup_list = []
 skip_list = []
 dialogs.each do |dialog|
-  next if dialog['print_name'].nil?
-  next if dialog['print_name'].empty?
 
   # Compatibility with upcoming tg version (1.4)
   dialog['id'] = dialog['peer_id'] if dialog.key?('peer_id')
   dialog['type'] = dialog['peer_type'] if dialog.key?('peer_type')
+
+  # Print name is empty for e.g. deleted users
+  # Substitute an empty print name with something like 'user#123456'
+  if dialog['print_name'].nil? || dialog['print_name'].empty?
+    dialog['print_name'] = '%s#%s' % [dialog['type'], dialog['id'].to_s]
+  end
 
   if backup_target?(dialog)
     backup_list.push(dialog)
