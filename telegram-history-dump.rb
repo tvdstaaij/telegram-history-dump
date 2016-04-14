@@ -66,23 +66,22 @@ def dump_dialog(dialog)
     raise 'Expected array' unless msg_chunk.is_a?(Array)
     msg_chunk.reverse_each do |msg|
       dump_msg = true
-      if msg['id']
-        cur_progress.bump_id(msg['id'])
-      else
+      unless msg['id']
         $log.warn('Dropping message without id: %s' % msg)
         dump_msg = false
       end
-      if msg['date']
-        cur_progress.bump_date(msg['date'])
-      else
-        $log.warn('Message without date: %s' % msg)
+      unless msg['date']
+        $log.warn('Dropping message without date: %s' % msg)
+        dump_msg = false
       end
+
+      cur_progress.update(msg)
 
       if msg['text'] && filter_regex && filter_regex =~ msg['text']
         dump_msg = false
       end
 
-      unless $dumper.msg_fresh?(msg, old_progress)
+      unless msg['date'] && $dumper.msg_fresh?(msg, old_progress)
         if keep_dumping
           $log.info('Reached end of new messages since last backup')
         end

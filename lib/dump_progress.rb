@@ -2,25 +2,29 @@ require 'json'
 
 class DumpProgress
 
-  attr_reader :last_id
-  attr_reader :last_date
+  attr_reader :newest_id
+  attr_reader :newest_date
   attr_reader :dumper_state
   attr_writer :dumper_state
 
-  def initialize(last_id = nil, last_date = nil, dumper_state = {})
-    @last_id = last_id
-    @last_date = last_date
+  def initialize(newest_id = nil, newest_date = nil, dumper_state = {})
+    @newest_id = newest_id
+    @newest_date = newest_date
     @dumper_state = dumper_state
   end
 
   def self.from_hash(hash)
-    self.new(hash['last_id'], hash['last_date'], hash['dumper_state'])
+    self.new(
+      hash['newest_id'],
+      hash['newest_date'] || hash['last_date'], # last_date is v2.0.x compat
+      hash['dumper_state']
+    )
   end
 
   def to_hash
     {
-      :last_id => @last_id,
-      :last_date => @last_date,
+      :newest_id => @newest_id,
+      :newest_date => @newest_date,
       :dumper_state => @dumper_state
     }
   end
@@ -29,12 +33,11 @@ class DumpProgress
     to_hash.to_json(*a)
   end
 
-  def bump_id(id)
-    @last_id = id if !@last_id || id > @last_id
-  end
-
-  def bump_date(date)
-    @last_date = date if !@last_date || date > @last_date
+  def update(msg)
+    if !@newest_date || (msg['date'] && msg['date'] >= @newest_date)
+      @newest_date = msg['date'] || @newest_date
+      @newest_id = msg['id'] || @newest_id
+    end
   end
 
 end

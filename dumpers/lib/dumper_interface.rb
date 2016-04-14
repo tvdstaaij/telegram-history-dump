@@ -7,9 +7,9 @@ require_relative '../../lib/util'
 # * Implement one or more of the functions listed below (at least dump_msg)
 
 # Note:
-#   Dumpers are a low-level construct and as of v2.0.0 dumpers they are no
-#   longer used for custom output formats. Instead, custom formatters have been
-#   introduced for this purpose.
+#   Dumpers are a low-level construct and as of v2.0.0 they are no longer used
+#   for implementing custom output formats. Instead, custom formatters have been
+#   introduced for this purpose (see /formatters/lib/formatter_base.rb).
 
 class DumperInterface
 
@@ -30,7 +30,16 @@ class DumperInterface
   # This default makes sense in simple cases, override for advanced custom logic
   def msg_fresh?(msg, progress)
     # msg: Hash, progress: DumpProgress
-    !progress.last_id || msg['id'] > progress.last_id
+
+    return true unless progress.newest_date
+
+    if msg['date'] && msg['date'] > progress.newest_date
+      return true
+    elsif msg['date'] == progress.newest_date && progress.newest_id
+      return true if msg['id'] && msg['id'] > progress.newest_id
+    end
+
+    false
   end
 
   # Will be called for each message to dump (from newest to oldest)
