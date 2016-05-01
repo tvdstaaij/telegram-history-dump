@@ -36,7 +36,7 @@ class DumperInterface
     if msg['date'] && msg['date'] > progress.newest_date
       return true
     elsif msg['date'] == progress.newest_date && progress.newest_id
-      return true if msg['id'] && msg['id'] > progress.newest_id
+      return true if msg['id'] && msg['id'].to_s > progress.newest_id.to_s
     end
 
     false

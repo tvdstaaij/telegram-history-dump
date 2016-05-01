@@ -36,7 +36,7 @@ class DumpProgress
   def update(msg)
     if !@newest_date || (msg['date'] && msg['date'] >= @newest_date)
       @newest_date = msg['date'] || @newest_date
-      @newest_id = msg['id'] || @newest_id
+      @newest_id = (msg['id'] || @newest_id).to_s
     end
   end
 
