@@ -27,15 +27,18 @@
   # Formatters export the JSON output to a different format
   # To enable a formatter, uncomment it along with all of its options
   # If no formatters are enabled, only JSON files are produced
-  formatters:
-  #  plaintext:
+  formatters: {
+  #  plaintext: {
   #    date_format: '%Y-%m-%d %H:%M:%S'
-  #  bare:
-  #  pisg:
-  #  html:
-  #    paginate: 1500 # messages per page
-  #    use_utc_time: false
-  #    timestamps_every: 50 # messages
+  #  },
+  #  bare: {},
+  #  pisg: {},
+  #  html: {
+  #    paginate: 1500, # messages per page
+  #    use_utc_time: false,
+  #    timestamps_every: 50, # messages
+  #  },
+  }
 
   # Target directory for the backup files
   # It his is a relative path it will be relative to the script's directory
@@ -47,11 +50,12 @@
   # At the time of writing, telegram-cli does not properly detect audio/video
   # These will be recognized as documents instead
   # Stickers are also considered documents
-  download_media:
-    photo: false
-    document: false
-    audio: false
-    video: false
+  download_media: {
+    photo: false,
+    document: false,
+    audio: false,
+    video: false,
+  }
 
   # False to reference downloaded files in the telegram-cli cache
   # True to copy downloaded media to a dedicated directory per dialog
