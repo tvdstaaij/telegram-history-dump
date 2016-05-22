@@ -194,19 +194,15 @@ $config = YAML.load_file(
 )
 $log = Logger.new(STDOUT)
 
+unless cli_opts.userdir.nil? || cli_opts.userdir.empty?
+  $config['backup_dir'] = File.join($config['backup_dir'], cli_opts.userdir)
+end
+
+unless cli_opts.backlog_limit.nil? || cli_opts.backlog_limit < 0
+  $config['backlog_limit'] = cli_opts.backlog_limit
+end
+
 FileUtils.mkdir_p(get_backup_dir)
-
-if !cli_opts[:userdir].nil?
-        if  !cli_opts.userdir.empty? || !cli_opts.userdir.nil?
-                $config['backup_dir'] = File.join($config['backup_dir'],cli_opts.userdir)
-        end
-end
-
-if !cli_opts[:backlog_limit].nil?
-        if  !cli_opts.backlog_limit.empty? || !cli_opts.backlog_limit.nil?
-                $config['backlog_limit'] = cli_opts.backlog_limit
-        end
-end
 
 $dumper = JsonDumper.new
 $progress = {}

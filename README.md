@@ -58,9 +58,13 @@ specific options are available exclusively as CLI options.
 
 ```text
 Usage: telegram-history-dump.rb [options]
-    -c, --config=cfgfile.yaml        Path to configuration file
+    -c, --config=cfg.yaml            Path to YAML configuration file
     -k, --kill-tg                    Kill telegram-cli after backup
     -h, --help                       Show help
+    -d, --dir=DIR                    Subdirectory for output files
+                                     (relative to backup_dir in YAML config)
+    -l, --limit=LIMIT                Maximum number of messages to backup
+                                     for each target (overrides YAML config)
 ```
 
 ## Notes
