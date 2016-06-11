@@ -13,6 +13,9 @@ require_relative 'lib/dump_progress'
 require_relative 'lib/util'
 require_relative 'lib/tg_def'
 
+class RetryError < Exception
+end
+
 Dir[File.dirname(__FILE__) + '/formatters/*.rb'].each do |file|
   require File.expand_path(file)
 end
@@ -60,9 +63,21 @@ def dump_dialog(dialog)
                 offset + $config['chunk_size']
               ])
     msg_chunk = nil
-    Timeout::timeout($config['chunk_timeout']) do
-      msg_chunk = exec_tg_command('history', dialog['print_name'],
-                                  $config['chunk_size'], offset)
+    retry_count = 0
+    while retry_count <= $config["chunk_retry"] do
+        begin 
+            Timeout::timeout($config['chunk_timeout']) do
+              msg_chunk = exec_tg_command('history', dialog['print_name'],
+                                          $config['chunk_size'], offset)
+            end
+            break
+        rescue Timeout::Error
+            if retry_count == $config["chunk_retry"]
+                raise RetryError
+            end
+            $log.error('Timeout, retrying... (%d/%d)' % [retry_count + 1, $config["chunk_retry"]])
+            retry_count += 1;
+        end
     end
     raise 'Expected array' unless msg_chunk.is_a?(Array)
     msg_chunk.reverse_each do |msg|
@@ -299,8 +314,8 @@ backup_list.each_with_index do |dialog,i|
     connect_socket
     dump_dialog(dialog)
     save_progress
-  rescue Timeout::Error
-    $log.error('Command timeout, skipping to next dialog')
+  rescue RetryError
+    $log.error('Timeout, skipping to next dialog')
     disconnect_socket
   end
 end
