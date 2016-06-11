@@ -249,7 +249,13 @@ backup_list = []
 skip_list = []
 dialogs.each do |dialog|
 
-  # Compatibility with upcoming tg version (1.4)
+  # Workaround for tg bug where supergroups may have more than one list entry
+  next if backup_list.any? do |selected_dialog|
+    return false unless selected_dialog.include?('peer_id')
+    selected_dialog['peer_id'] == dialog['peer_id']
+  end
+
+  # Compatibility with latest tg (1.4+)
   dialog['id'] = dialog['peer_id'] if dialog.key?('peer_id')
   dialog['type'] = dialog['peer_type'] if dialog.key?('peer_type')
 
