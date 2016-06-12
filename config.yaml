@@ -37,6 +37,7 @@
   #    paginate: 1500, # messages per page
   #    use_utc_time: false,
   #    timestamps_every: 50, # messages
+  #    loop_video: true, # loop and autoplay videos
   #  },
   }
 

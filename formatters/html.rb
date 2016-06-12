@@ -119,7 +119,11 @@ class HtmlFormatter < FormatterBase
             msg_body = "<a href='#{relative_url}'>Download #{extension} file</a>"
           end
           if filetype == 'audio' or filetype == 'video'
-            msg_body = "<#{filetype} src='#{relative_url}' controls>Your browser does not support inline playback.</#{filetype}><br><a href='#{relative_url}'>Download #{filetype}</a>"
+            msg_body = "<#{filetype} src='#{relative_url}' controls"
+            if $config['formatters']['html']['loop_video'] && filetype == 'video'
+              msg_body += " loop autoplay muted"
+            end
+            msg_body += ">Your browser does not support inline playback.</#{filetype}><br><a href='#{relative_url}'>Download #{filetype}</a>"
           end
         end
         author += '<br>' if author != '' # In file messages (unlike text messages), author is followed by a new line
