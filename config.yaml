@@ -21,6 +21,9 @@
   # is built from their test branch (feature tested with tg revision c69f2a2)
   backup_channels: null
 
+  # By default telegram-cli return only the first 100 dialogs.
+  # If you want or have more dialogs to backup, increase this value.
+  maximum_dialogs: 100
 
   ## Output options ##
 
