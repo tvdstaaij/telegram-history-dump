@@ -1,8 +1,8 @@
 # telegram-history-dump
 
 This utility is the successor of [telegram-json-backup][1], written from the
-ground up in Ruby. It can create backups of your Telegram conversations using
-telegram-cli's remote control feature.
+ground up in Ruby. It can create backups of your Telegram user and (super)group
+dialogs using telegram-cli's remote control feature.
  
 Compared to the old project, telegram-history-dump:
 
@@ -21,7 +21,7 @@ in JSON format, without downloading any media.
 
 1. Compile [telegram-cli][3], start it once to link your Telegram account
 2. Make sure Ruby 2+ is installed on your system: `ruby --version`
-3. Configure your backup routine by editing `config.yaml`
+3. Optionally configure your backup routine by editing `config.yaml`
 
 ### Performing a backup
 
@@ -54,7 +54,7 @@ You can also implement a custom formatter; see
 ## Command line options
 
 Most of the backup configuration is done through the config file, but a few
-specific options are available exclusively as CLI options.
+specific options are available as CLI options. None of them are mandatory.
 
 ```text
 Usage: telegram-history-dump.rb [options]
@@ -71,9 +71,6 @@ Usage: telegram-history-dump.rb [options]
 
 Usage notes:
 
-* Backing up [channels][6] is possible but requires a [test build][8] of
-  telegram-cli until they merge this functionality into master. However, see
-  known issues below.
 * It is possible to run telegram-cli on a different machine, e.g. as a daemon
   on a server. In this case you must pass `--accept-any-tcp` to telegram-cli and
   firewall the port appropriately to prevent unwanted exposure. Keep in mind
@@ -86,16 +83,14 @@ Telegram-cli issues known to affect telegram-history-dump:
 
 * [vysheng/tg#947][9] can cause crashes when dumping channels with more than 100
   messages.
-* [vysheng/tg#904][10] can cause crashes when dialogs contain certain media files.
-  If you get this, recompile telegram-cli with the suggested workaround. 
+* [vysheng/tg#904][10] can cause crashes when dialogs contain certain media
+  files. If you get this, recompile telegram-cli with the suggested workaround. 
 
 [1]: https://github.com/tvdstaaij/telegram-json-backup
 [2]: https://github.com/tvdstaaij/telegram-pisg
 [3]: https://github.com/vysheng/tg
 [4]: http://bundler.io/
 [5]: http://jsonlines.org/
-[6]: https://telegram.org/blog/channels
 [7]: http://pisg.sourceforge.net/
-[8]: https://github.com/vysheng/tg/tree/test
 [9]: https://github.com/vysheng/tg/issues/947
 [10]: https://github.com/vysheng/tg/issues/904

@@ -2,28 +2,37 @@
 
   ## Backup targets ##
   #
+  # Array of strings for each category
   # Partial names are allowed, it doesn't have to be exact
-  # Empty array (the default) means "everything in this category"
-  # null or an array containing only null means "nothing in this category"
+  # An empty array means "everything in this category"
+  # An array containing only null means "nothing in this category"
 
   # Array of user dialogs to backup
   backup_users: [
 
   ]
-  
+
   # Array of group dialogs to backup
   backup_groups: [
-  
-  ]
-  
-  # Array of broadcast channels to backup
-  # Disabled by default because for the moment it will fail unless telegram-cli
-  # is built from their test branch (feature tested with tg revision c69f2a2)
-  backup_channels: null
 
-  # By default telegram-cli return only the first 100 dialogs.
-  # If you want or have more dialogs to backup, increase this value.
+  ]
+
+  # Array of supergroup dialogs to backup
+  backup_supergroups: [
+    null
+  ]
+
+  # Array of broadcast channels to backup
+  # WARNING: using this can cause a crash when a channel has too many messages
+  # to fit in a single chunk (see https://github.com/vysheng/tg/issues/947)
+  backup_channels: [
+    null
+  ]
+
+  # By default telegram-cli returns only the first 100 dialogs/channels
+  # If you have more than 100 dialogs, increase this value
   maximum_dialogs: 100
+
 
   ## Output options ##
 

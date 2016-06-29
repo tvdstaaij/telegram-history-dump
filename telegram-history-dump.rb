@@ -11,6 +11,7 @@ require_relative 'formatters/lib/formatter_base'
 require_relative 'lib/cli_parser'
 require_relative 'lib/dump_progress'
 require_relative 'lib/util'
+require_relative 'lib/tg_def'
 
 Dir[File.dirname(__FILE__) + '/formatters/*.rb'].each do |file|
   require File.expand_path(file)
@@ -150,12 +151,24 @@ def fix_media_ext(filename)
 end
 
 def backup_target?(dialog)
-  candidates = case dialog['type']
+  dialog_type = case
+    when dialog['type'] == 'channel' &&
+         (dialog['flags'] & TgDef::TGLCHF_MEGAGROUP) != 0
+      then 'supergroup'
+    else dialog['type']
+  end
+  candidates = case dialog_type
     when 'user' then $config['backup_users']
     when 'chat' then $config['backup_groups']
     when 'channel' then $config['backup_channels']
-    else return false
+    when 'supergroup' then $config['backup_supergroups']
+    else
+      $log.warn('Unknown type "%s" for dialog "%s"' % [
+        dialog_type, dialog['print_name']
+      ])
+      return false
   end
+
   return false unless candidates
   return true if candidates.empty?
   candidates.each do |candidate|
@@ -240,8 +253,7 @@ end
 connect_socket
 
 dialogs = exec_tg_command('dialog_list', $config['maximum_dialogs'])
-channels = $config['backup_channels'] ?
-  exec_tg_command('channel_list') : []
+channels = exec_tg_command('channel_list', $config['maximum_dialogs'])
 raise 'Expected array' unless dialogs.is_a?(Array) && channels.is_a?(Array)
 dialogs = dialogs.concat(channels)
 raise 'No dialogs found' if dialogs.empty?
@@ -249,7 +261,8 @@ backup_list = []
 skip_list = []
 dialogs.each do |dialog|
 
-  # Workaround for tg bug where supergroups may have more than one list entry
+  # Supergroups may have more than one list entry because they are included in
+  # both dialog_list and channel_list, so ignore duplicate IDs
   next if backup_list.any? do |selected_dialog|
     return false unless selected_dialog.include?('peer_id')
     selected_dialog['peer_id'] == dialog['peer_id']
