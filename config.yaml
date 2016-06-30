@@ -100,13 +100,13 @@
 
   # Time in seconds to wait before considering a request stuck (0 = infinite)
   chunk_timeout: 10
-  
+
   # Number of times to retry getting one chunk
-  chunk_retry: 3 
+  chunk_retry: 3
 
   # Time in seconds to wait before considering a download stuck (0 = infinite)
-  # Beware: setting this nonzero may cause a dialog backup to be canceled
-  # because of a large media file
+  # This setting is not very useful at the moment, it just skips to the next
+  # dialog if downloading a media file takes too long
   media_timeout: 0
 
 

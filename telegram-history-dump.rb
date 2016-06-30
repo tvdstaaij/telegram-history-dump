@@ -13,9 +13,6 @@ require_relative 'lib/dump_progress'
 require_relative 'lib/util'
 require_relative 'lib/tg_def'
 
-class RetryError < Exception
-end
-
 Dir[File.dirname(__FILE__) + '/formatters/*.rb'].each do |file|
   require File.expand_path(file)
 end
@@ -57,29 +54,39 @@ def dump_dialog(dialog)
   offset = 0
   keep_dumping = true
   while keep_dumping do
+    cur_offset = offset
     $log.info('Dumping "%s" (range %d-%d)' % [
                 dialog['print_name'],
-                offset + 1,
-                offset + $config['chunk_size']
+                cur_offset + 1,
+                cur_offset + $config['chunk_size']
               ])
     msg_chunk = nil
     retry_count = 0
-    while retry_count <= $config["chunk_retry"] do
-        begin 
-            Timeout::timeout($config['chunk_timeout']) do
-              msg_chunk = exec_tg_command('history', dialog['print_name'],
-                                          $config['chunk_size'], offset)
-            end
-            break
-        rescue Timeout::Error
-            if retry_count == $config["chunk_retry"]
-                raise RetryError
-            end
-            $log.error('Timeout, retrying... (%d/%d)' % [retry_count + 1, $config["chunk_retry"]])
-            retry_count += 1;
+    while retry_count <= $config['chunk_retry'] do
+      begin
+        Timeout::timeout($config['chunk_timeout']) do
+          msg_chunk = exec_tg_command('history', dialog['print_name'],
+                                      $config['chunk_size'], cur_offset)
         end
+        break
+      rescue Timeout::Error
+        if retry_count == $config['chunk_retry']
+          $log.error('Failed to fetch chunk of %d messages from offset %d '\
+                     'after retrying %d times. Dump of "%s" is incomplete.' % [
+                       $config['chunk_size'], cur_offset,
+                       retry_count, dialog['print_name']
+                     ])
+          msg_chunk = []
+          offset += $config['chunk_size']
+          break
+        end
+        $log.error('Timeout, retrying... (%d/%d)' % [
+          retry_count += 1, $config['chunk_retry']
+        ])
+      end
     end
     raise 'Expected array' unless msg_chunk.is_a?(Array)
+
     msg_chunk.reverse_each do |msg|
       dump_msg = true
       unless msg['id']
@@ -118,7 +125,8 @@ def dump_dialog(dialog)
         break
       end
     end
-    keep_dumping = false if msg_chunk.length < $config['chunk_size']
+
+    keep_dumping = false if offset < cur_offset + $config['chunk_size']
     sleep($config['chunk_delay']) if keep_dumping
   end
   state = $dumper.end_dialog(dialog) || {}
@@ -314,8 +322,8 @@ backup_list.each_with_index do |dialog,i|
     connect_socket
     dump_dialog(dialog)
     save_progress
-  rescue RetryError
-    $log.error('Timeout, skipping to next dialog')
+  rescue Timeout::Error
+    $log.error('Unhandled timeout, skipping to next dialog')
     disconnect_socket
   end
 end
