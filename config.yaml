@@ -54,7 +54,8 @@
   }
 
   # Target directory for the backup files
-  # It his is a relative path it will be relative to the script's directory
+  # If this is a relative path it will be relative to the script's directory
+  # Absolute path starts with '/' or '~'
   backup_dir: './output'
 
   # Maximum number of messages to backup for each target (0 means unlimited)
