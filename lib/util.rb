@@ -17,7 +17,15 @@ def get_full_name(user)
 end
 
 def get_backup_dir
-  File.expand_path(File.join('..', '..', $config['backup_dir']), __FILE__)
+  parent_dir =
+    case $config['backup_dir'][0]
+    when '/', '~'
+      $config['backup_dir']
+    else
+      ['..', '..', $config['backup_dir']]
+    end
+
+  File.expand_path(File.join(parent_dir), __FILE__)
 end
 
 def get_media_dir(dialog)
