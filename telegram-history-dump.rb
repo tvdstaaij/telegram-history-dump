@@ -12,6 +12,7 @@ require_relative 'lib/cli_parser'
 require_relative 'lib/dump_progress'
 require_relative 'lib/util'
 require_relative 'lib/tg_def'
+require_relative 'lib/msg_id'
 
 Dir[File.dirname(__FILE__) + '/formatters/*.rb'].each do |file|
   require File.expand_path(file)
@@ -51,6 +52,7 @@ def dump_dialog(dialog)
   cur_progress = ($progress[id_str] ||= DumpProgress.new)
   $dumper.start_dialog(dialog, old_progress)
   filter_regex = $config['filter_regex'] && eval($config['filter_regex'])
+  prev_msg_id = nil
   offset = 0
   keep_dumping = true
   while keep_dumping do
@@ -93,11 +95,19 @@ def dump_dialog(dialog)
         $log.warn('Dropping message without id: %s' % msg)
         dump_msg = false
       end
+      msg_id = msg['id'] ? MsgId.new(msg['id']) : nil
+      unless !msg_id || !prev_msg_id || msg_id < prev_msg_id
+        $log.warn('Message ids are not sequential (%s[%s] -> %s[%s])' % [
+          prev_msg_id.raw_hex, prev_msg_id.sequence_hex,
+          msg_id.raw_hex, msg_id.sequence_hex,
+        ])
+      end
       unless msg['date']
         $log.warn('Dropping message without date: %s' % msg)
         dump_msg = false
       end
 
+      prev_msg_id = MsgId.new(msg['id']) if msg['id']
       cur_progress.update(msg)
 
       if msg['text'] && filter_regex && filter_regex =~ msg['text']
