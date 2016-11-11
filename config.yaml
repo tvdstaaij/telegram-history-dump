@@ -58,6 +58,14 @@
   # Absolute path starts with '/' or '~'
   backup_dir: './output'
 
+  # Data file naming style:
+  # True for "My_Chat_Name.jsonl", false for "193044.jsonl" (fixed id)
+  friendly_data_filenames: true
+
+  # True to rename data files when their name changes
+  # For example, "My_Chat_Name.jsonl" is renamed to "WhoChangedTheTitle.jsonl"
+  update_data_filenames: true
+
   # Maximum number of messages to backup for each target (0 means unlimited)
   backlog_limit: 0
 
