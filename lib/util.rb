@@ -49,3 +49,11 @@ def truncate_to_bytesize(str, size, ellipsis = '')
     end
   end
 end
+
+def system_big_endian?
+  [1].pack('I') == [1].pack('N')
+end
+
+def flip_bytes(hex)
+  hex.scan(/../).reverse.join('')
+end

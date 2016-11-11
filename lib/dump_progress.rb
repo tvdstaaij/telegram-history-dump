@@ -1,4 +1,5 @@
 require 'json'
+require_relative 'msg_id'
 
 class DumpProgress
 
@@ -8,7 +9,7 @@ class DumpProgress
   attr_writer :dumper_state
 
   def initialize(newest_id = nil, newest_date = nil, dumper_state = {})
-    @newest_id = newest_id
+    @newest_id = newest_id ? MsgId.new(newest_id) : nil
     @newest_date = newest_date
     @dumper_state = dumper_state
   end
@@ -23,7 +24,7 @@ class DumpProgress
 
   def to_hash
     {
-      :newest_id => @newest_id,
+      :newest_id => @newest_id.to_s,
       :newest_date => @newest_date,
       :dumper_state => @dumper_state
     }
@@ -34,9 +35,10 @@ class DumpProgress
   end
 
   def update(msg)
-    if !@newest_date || (msg['date'] && msg['date'] >= @newest_date)
+    msg_id = msg['id'] ? MsgId.new(msg['id']) : nil
+    if msg_id && (!@newest_id || msg_id > @newest_id)
+      @newest_id = msg_id
       @newest_date = msg['date'] || @newest_date
-      @newest_id = (msg['id'] || @newest_id).to_s
     end
   end
 

@@ -230,6 +230,11 @@ $config = YAML.load_file(
 )
 $log = Logger.new(STDOUT)
 
+if $config['track_progress'] && system_big_endian?
+  raise 'For reasons you do not want to know, a little endian system is '\
+        'necessary for incremental backups. Please report this as an issue.'
+end
+
 unless cli_opts.userdir.nil? || cli_opts.userdir.empty?
   $config['backup_dir'] = File.join($config['backup_dir'], cli_opts.userdir)
 end
