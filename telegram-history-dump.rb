@@ -206,6 +206,8 @@ def backup_target?(dialog)
   return true if candidates.empty?
   candidates.each do |candidate|
     next unless candidate
+    return true if candidate.to_s == dialog['id'].to_s
+    next unless candidate.is_a?(String)
     dialog_name = strip_tg_special_chars(dialog['print_name'])
     dialog_name = get_safe_name(dialog_name).upcase
     candidate_name = strip_tg_special_chars(candidate)

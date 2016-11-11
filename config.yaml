@@ -3,7 +3,7 @@
   ## Backup targets ##
   #
   # Array of strings for each category
-  # Partial names are allowed, it doesn't have to be exact
+  # Strings can be either a (partial) name or a telegram-cli "peer_id" value
   # An empty array means "everything in this category"
   # An array containing only null means "nothing in this category"
 
