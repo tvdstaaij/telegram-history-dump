@@ -23,7 +23,6 @@ class PlaintextFormatter < DailyFileFormatter
           else
             from_name += ' (reply)'
           end
-          # Possible impovement: find reply text
         end
 
         content = case
@@ -63,7 +62,12 @@ class PlaintextFormatter < DailyFileFormatter
           when 'chat_del_user'
             "#{from_name} removed #{user_name}"
           when 'chat_rename'
-            "#{from_name} changed group name to #{message['action']['title']}"
+            "#{from_name} changed group name to \"%s\"" %
+              message['action']['title']
+          when 'chat_change_photo'
+            "#{from_name} changed group photo"
+          when 'chat_created'
+            "Group \"#{message['action']['title']}\" created"
           else nil
         end
       else nil
