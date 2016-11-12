@@ -59,6 +59,8 @@ class PlaintextFormatter < DailyFileFormatter
             else
               "#{from_name} added #{user_name}"
             end
+          when 'chat_add_user_link'
+            "#{from_name} joined with an invite link"
           when 'chat_del_user'
             if message['from']['peer_id'] == user['peer_id'] ||
                !message['from']['peer_id']

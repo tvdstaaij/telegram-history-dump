@@ -154,6 +154,8 @@ class HtmlFormatter < FormatterBase
             else
               text += "added %s" % CGI::escapeHTML(get_full_name(msg['action']['user']))
             end
+          elsif msg['action']['type'] == 'chat_add_user_link'
+            text += "joined with an invite link"
           elsif msg['action']['type'] == 'chat_rename'
             text += "changed group name to &laquo;%s&raquo;" % CGI::escapeHTML(msg['action']['title'])
           elsif msg['action']['type'] == 'chat_change_photo'

@@ -63,6 +63,8 @@ class PisgFormatter < DailyFileFormatter
         target_ref = target ? 'u' + target['id'].to_s : ''
         case message['action']['type'].downcase
           when 'chat_add_user'
+            "*** Joins: #{target_ref} (tg@#{target_ref}.users.telegram)"
+          when 'chat_add_user_link'
             "*** Joins: #{user_ref} (tg@#{user_ref}.users.telegram)"
           when 'chat_del_user'
             return if target['print_name'].to_s == ''
