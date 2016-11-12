@@ -38,10 +38,21 @@ class PisgFormatter < DailyFileFormatter
   end
 
   def format_message(dialog, message, output_stream)
+    involved_users = []
+    involved_users << message['from'] if message['from']
+    if message['to'] && message['to']['peer_type'] == 'user'
+      involved_users << message['to']
+    end
+    if message['action'] && message['action']['user']
+      involved_users << message['action']['user']
+    end
+    involved_users.each do |user|
+      @users[user['peer_id']] = user if user['peer_id']
+    end
+
     return unless message['date'] and message['from']
     return if message['from']['print_name'].to_s == ''
     @oldest_message_date ||= Time.at(message['date'])
-    @users[message['from']['id']] = message['from']
     lines = message['text'].to_s.split("\n")
     lines.push('') if lines.empty?
     lines.reverse_each do |message_line|
@@ -51,7 +62,7 @@ class PisgFormatter < DailyFileFormatter
 
   def dump_message_line(message, message_line, output_stream)
     date_str = Time.at(message['date']).strftime('[%H:%M:%S] ')
-    user_ref = 'u' + message['from']['id'].to_s
+    user_ref = 'u' + message['from']['peer_id'].to_s
 
     line = case message['event'].downcase
       when 'message'
@@ -60,7 +71,7 @@ class PisgFormatter < DailyFileFormatter
         else nil end
       when 'service'
         target = message['action']['user']
-        target_ref = target ? 'u' + target['id'].to_s : ''
+        target_ref = target ? 'u' + target['peer_id'].to_s : ''
         case message['action']['type'].downcase
           when 'chat_add_user'
             "*** Joins: #{target_ref} (tg@#{target_ref}.users.telegram)"
