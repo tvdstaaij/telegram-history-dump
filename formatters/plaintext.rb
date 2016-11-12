@@ -60,7 +60,12 @@ class PlaintextFormatter < DailyFileFormatter
               "#{from_name} added #{user_name}"
             end
           when 'chat_del_user'
-            "#{from_name} removed #{user_name}"
+            if message['from']['peer_id'] == user['peer_id'] ||
+               !message['from']['peer_id']
+              "#{user_name} left"
+            else
+              "#{from_name} removed #{user_name}"
+            end
           when 'chat_rename'
             "#{from_name} changed group name to \"%s\"" %
               message['action']['title']
