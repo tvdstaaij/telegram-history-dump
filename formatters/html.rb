@@ -148,7 +148,12 @@ class HtmlFormatter < FormatterBase
           end
           text += ' '
           if msg['action']['type'] == 'chat_add_user'
-            text += "added %s" % CGI::escapeHTML(get_full_name(msg['action']['user']))
+            if msg['from']['peer_id'] == msg['action']['user']['peer_id'] ||
+               !msg['from']['peer_id']
+              text = "%s joined" % CGI::escapeHTML(get_full_name(msg['action']['user']))
+            else
+              text += "added %s" % CGI::escapeHTML(get_full_name(msg['action']['user']))
+            end
           elsif msg['action']['type'] == 'chat_rename'
             text += "changed group name to &laquo;%s&raquo;" % CGI::escapeHTML(msg['action']['title'])
           elsif msg['action']['type'] == 'chat_change_photo'
@@ -156,7 +161,12 @@ class HtmlFormatter < FormatterBase
           elsif msg['action']['type'] == 'chat_created'
             text += "created group &laquo;%s&raquo;" % CGI::escapeHTML(msg['action']['title'])
           elsif msg['action']['type'] == 'chat_del_user'
-            text += "removed %s" % CGI::escapeHTML(get_full_name(msg['action']['user']))
+            if msg['from']['peer_id'] == msg['action']['user']['peer_id'] ||
+               !msg['from']['peer_id']
+              text = "%s left" % CGI::escapeHTML(get_full_name(msg['action']['user']))
+            else
+              text += "removed %s" % CGI::escapeHTML(get_full_name(msg['action']['user']))
+            end
           else
               text += CGI::escapeHTML(msg['action'].to_s)
           end
