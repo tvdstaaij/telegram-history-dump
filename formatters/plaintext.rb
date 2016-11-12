@@ -7,6 +7,7 @@ class PlaintextFormatter < DailyFileFormatter
   def format_message(dialog, message, output_stream)
     date_str = Time.at(message['date']).strftime('[%s] ' % @options['date_format'])
     from_name = get_full_name(message['from'])
+    from_name = '(Unknown)' if from_name.empty?
 
     line = case message['event'].downcase
       when 'message'
@@ -14,7 +15,14 @@ class PlaintextFormatter < DailyFileFormatter
         if !fwd_from_name.empty?
           from_name += ' (forwarded from %s)' % fwd_from_name
         elsif message['reply_id']
-          from_name += ' (reply)'
+          reply_target = find_earlier_message(message['reply_id'])
+          if reply_target
+            reply_name = get_full_name(reply_target['from'])
+            from_name += ' (in reply to %s)' %
+              [reply_name.to_s.empty? ? 'someone' : reply_name]
+          else
+            from_name += ' (reply)'
+          end
           # Possible impovement: find reply text
         end
 
@@ -42,10 +50,16 @@ class PlaintextFormatter < DailyFileFormatter
         end
 
       when 'service'
-        user_name = get_full_name(message['action']['user'])
+        user = message['action']['user']
+        user_name = get_full_name(user)
         case message['action']['type'].downcase
           when 'chat_add_user'
-            "#{from_name} added #{user_name}"
+            if message['from']['peer_id'] == user['peer_id'] ||
+               !message['from']['peer_id']
+              "#{user_name} joined"
+            else
+              "#{from_name} added #{user_name}"
+            end
           when 'chat_del_user'
             "#{from_name} removed #{user_name}"
           when 'chat_rename'

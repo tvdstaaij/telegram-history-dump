@@ -16,8 +16,10 @@ class DailyFileFormatter < FormatterBase
     @dialog_dir = File.join(output_dir, safe_name)
     FileUtils.mkdir_p(@dialog_dir)
 
+    @messages = messages
     start_dialog(dialog)
-    messages.reverse_each do |message|
+    (0...messages.length).reverse_each do |i|
+      message = messages[@msg_index = i]
       date = message['date']
       next unless date
       date = Time.at(date).to_date
@@ -52,6 +54,13 @@ class DailyFileFormatter < FormatterBase
 
   def get_filename_for_date(dialog, date)
     raise 'get_filename_for_date must be implemented'
+  end
+
+  def find_earlier_message(id)
+    (@msg_index...@messages.length).each do |i|
+      return @messages[i] if @messages[i]['id'] == id
+    end
+    nil
   end
 
 end
