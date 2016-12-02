@@ -22,9 +22,15 @@ cli_opts = CliParser.parse(ARGV)
 
 def connect_socket
   return if defined?($sock) && $sock
-  $log.info('Attaching to telegram-cli control socket at %s:%d' %
-              [$config['tg_host'], $config['tg_port']])
-  $sock = TCPSocket.open($config['tg_host'], $config['tg_port'])
+
+  if $config['tg_sock']
+    $log.info('Attaching to telegram-cli control socket at /var/run/telegram.sock')
+    $sock = UNIXSocket.new($config['tg_sock'])
+  else
+    $log.info('Attaching to telegram-cli control socket at %s:%d' %
+                [$config['tg_host'], $config['tg_port']])
+    $sock = TCPSocket.open($config['tg_host'], $config['tg_port'])
+  end
 end
 
 def disconnect_socket
