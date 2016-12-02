@@ -94,6 +94,15 @@
 
   ## Technical options ##
 
+  # Use a unix socket to communicate with telegram-cli
+  # Should match the path passed to telegram-cli with the -S option
+  #
+  # NB: Setting tg_sock to some not false value will cause the script
+  # to ignore the next options about TCP connection
+
+  # tg_sock: "/var/run/telegram.sock"
+  tg_sock: null
+
   # Address of the machine you are running telegram-cli on
   # If this is not localhost telegram-cli must be invoked with --accept-any-tcp
   tg_host: 'localhost'
