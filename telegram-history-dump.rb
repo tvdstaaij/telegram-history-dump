@@ -6,6 +6,7 @@ require 'logger'
 require 'socket'
 require 'timeout'
 require 'yaml'
+require 'pathname'
 require_relative 'dumpers/json'
 require_relative 'formatters/lib/formatter_base'
 require_relative 'lib/cli_parser'
@@ -168,7 +169,9 @@ def process_media(dialog, msg)
         filename = File.basename(response['result'])
         destination = File.join(get_media_dir(dialog), fix_media_ext(filename))
         FileUtils.cp(response['result'], destination)
-        destination
+        Pathname.new(destination)
+          .relative_path_from(Pathname.new(get_backup_dir))
+          .to_s
       else
         response['result']
     end
