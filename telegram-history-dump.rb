@@ -352,23 +352,25 @@ backup_list.each_with_index do |dialog,i|
 end
 $dumper.end_backup
 
-$log.info('Formatting messages') unless enabled_formatters.empty?
-enabled_formatters.each do |formatter|
-  formatter.start_backup(backup_list)
-end
-backup_list.each do |dialog|
-  dialog_progress = $progress[dialog['id'].to_s]
-  json_file = File.join(get_backup_dir, dialog_progress.dumper_state['outfile'])
-  messages = []
-  File.open(json_file, 'r:UTF-8').each do |line|
-    messages.push(JSON.parse(line))
+unless enabled_formatters.empty?
+  $log.info('Formatting messages')
+  enabled_formatters.each do |formatter|
+    formatter.start_backup(backup_list)
+  end
+  backup_list.each do |dialog|
+    dumper_outfile = $progress[dialog['id'].to_s].dumper_state['outfile']
+    json_file = File.join(get_backup_dir, dumper_outfile)
+    messages = []
+    File.open(json_file, 'r:UTF-8').each do |line|
+      messages.push(JSON.parse(line))
+    end
+    enabled_formatters.each do |formatter|
+      formatter.format_dialog(dialog, messages)
+    end
   end
   enabled_formatters.each do |formatter|
-    formatter.format_dialog(dialog, messages)
+    formatter.end_backup
   end
-end
-enabled_formatters.each do |formatter|
-  formatter.end_backup
 end
 
 if cli_opts.kill_tg
