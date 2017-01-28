@@ -30,8 +30,8 @@
   ]
 
   # By default telegram-cli returns only the first 100 dialogs/channels
-  # If you have more than 100 dialogs, increase this value
-  maximum_dialogs: 100
+  # We increase this to 1000. If you have even more, increase this value
+  maximum_dialogs: 1000
 
 
   ## Output options ##
