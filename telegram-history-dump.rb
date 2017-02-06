@@ -160,12 +160,12 @@ def process_media(dialog, msg)
     next unless $config['download_media'][media_type]
     next unless msg['media']['type'] == media_type
     response = nil
-    Timeout::timeout($config['media_timeout']) do
-      begin
+    begin
+      Timeout::timeout($config['media_timeout']) do
         response = exec_tg_command('load_' + media_type, msg['id'])
-      rescue StandardError => e
-        $log.error('Failed to download media file: %s' % e)
       end
+    rescue StandardError => e
+      $log.error('Failed to download media file: %s' % e)
     end
     filename = case
       when response.nil? || !response.is_a?(Hash)
