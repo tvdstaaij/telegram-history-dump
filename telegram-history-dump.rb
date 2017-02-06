@@ -70,7 +70,17 @@ def dump_dialog(dialog)
               ])
     msg_chunk = nil
     retry_count = 0
-    while retry_count <= $config['chunk_retry'] do
+    loop do
+      if retry_count >= $config['chunk_retry']
+        $log.error('Failed to fetch chunk of %d messages from offset %d '\
+                   'after retrying %d times. Dump of "%s" is incomplete.' % [
+                     $config['chunk_size'], cur_offset,
+                     retry_count, dialog['print_name']
+                   ])
+        msg_chunk = []
+        offset += $config['chunk_size']
+        break
+      end
       begin
         Timeout::timeout($config['chunk_timeout']) do
           msg_chunk = exec_tg_command('history', dialog['print_name'],
@@ -78,16 +88,6 @@ def dump_dialog(dialog)
         end
         break
       rescue Timeout::Error
-        if retry_count == $config['chunk_retry']
-          $log.error('Failed to fetch chunk of %d messages from offset %d '\
-                     'after retrying %d times. Dump of "%s" is incomplete.' % [
-                       $config['chunk_size'], cur_offset,
-                       retry_count, dialog['print_name']
-                     ])
-          msg_chunk = []
-          offset += $config['chunk_size']
-          break
-        end
         $log.error('Timeout, retrying... (%d/%d)' % [
           retry_count += 1, $config['chunk_retry']
         ])
