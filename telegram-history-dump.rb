@@ -160,10 +160,12 @@ def process_media(dialog, msg)
         response = exec_tg_command('load_' + media_type, msg['id'])
       rescue StandardError => e
         $log.error('Failed to download media file: %s' % e)
-        return
       end
     end
     filename = case
+      when response.nil? || !response.is_a?(Hash)
+        $log.error('Wrong response on media download for message id %s' % msg['id'])
+        nil
       when $config['copy_media']
         filename = File.basename(response['result'])
         destination = File.join(get_media_dir(dialog), fix_media_ext(filename))
@@ -177,7 +179,7 @@ def process_media(dialog, msg)
     rescue StandardError => e
       $log.error('Failed to delete media file: %s' % e)
     end
-    msg['media']['file'] = filename if filename
+    msg['media']['file'] = filename
   end
 end
 
