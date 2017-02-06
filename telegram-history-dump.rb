@@ -253,6 +253,7 @@ $config = YAML.load_file(
   cli_opts.cfgfile ||
   File.expand_path('../config.yaml', __FILE__)
 )
+STDOUT.sync = true
 $log = Logger.new(STDOUT)
 
 if $config['track_progress'] && system_big_endian?
