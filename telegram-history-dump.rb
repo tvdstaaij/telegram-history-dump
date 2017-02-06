@@ -89,11 +89,11 @@ def dump_dialog(dialog)
         if msg_chunk.is_a?(Array)
           break
         end
-        $log.error('telegram-cli returned a non array chunk, retrying... (%d/%d)' % [
+        $log.warn('telegram-cli returned a non array chunk, retrying... (%d/%d)' % [
           retry_count += 1, $config['chunk_retry']
         ])
       rescue Timeout::Error
-        $log.error('Timeout, retrying... (%d/%d)' % [
+        $log.warn('Timeout, retrying... (%d/%d)' % [
           retry_count += 1, $config['chunk_retry']
         ])
       end
@@ -165,7 +165,8 @@ def process_media(dialog, msg)
         response = exec_tg_command('load_' + media_type, msg['id'])
       end
     rescue StandardError => e
-      $log.error('Failed to download media file: %s' % e)
+      # This is a warning because we're going to log an error afterwards
+      $log.warn('Failed to download media file: %s' % e)
     end
     filename = case
       when response.nil? || !response.is_a?(Hash)
