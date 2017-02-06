@@ -86,7 +86,12 @@ def dump_dialog(dialog)
           msg_chunk = exec_tg_command('history', dialog['print_name'],
                                       $config['chunk_size'], cur_offset)
         end
-        break
+        if msg_chunk.is_a?(Array)
+          break
+        end
+        $log.error('telegram-cli returned a non array chunk, retrying... (%d/%d)' % [
+          retry_count += 1, $config['chunk_retry']
+        ])
       rescue Timeout::Error
         $log.error('Timeout, retrying... (%d/%d)' % [
           retry_count += 1, $config['chunk_retry']
