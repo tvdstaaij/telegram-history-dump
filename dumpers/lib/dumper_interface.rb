@@ -30,6 +30,7 @@ class DumperInterface
   # This default makes sense in simple cases, override for advanced custom logic
   def msg_fresh?(msg, progress)
     # msg: Hash, progress: DumpProgress
+    return false unless msg['id']
     !progress.newest_id || MsgId.new(msg['id']) > progress.newest_id
   end
 

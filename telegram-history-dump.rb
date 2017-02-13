@@ -120,7 +120,7 @@ def dump_dialog(dialog)
         dump_msg = false
       end
 
-      unless msg['date'] && $dumper.msg_fresh?(msg, old_progress)
+      unless $dumper.msg_fresh?(msg, old_progress)
         if keep_dumping
           $log.info('Reached end of new messages since last backup')
         end
