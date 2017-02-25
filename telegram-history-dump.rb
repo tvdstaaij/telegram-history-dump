@@ -102,12 +102,14 @@ def dump_dialog(dialog)
 
     msg_chunk.reverse_each do |msg|
       dump_msg = true
-      unless msg['id']
+      if msg['id'].to_s.empty?
         $log.warn('Dropping message without id: %s' % msg)
         dump_msg = false
+        msg_id = nil
+      else
+        msg_id = MsgId.new(msg['id'])
       end
-      msg_id = msg['id'] ? MsgId.new(msg['id']) : nil
-      unless !msg_id || !prev_msg_id || msg_id < prev_msg_id
+      if msg_id && prev_msg_id && msg_id >= prev_msg_id
         $log.warn('Message ids are not sequential (%s[%s] -> %s[%s])' % [
           prev_msg_id.raw_hex, prev_msg_id.sequence_hex,
           msg_id.raw_hex, msg_id.sequence_hex,
@@ -118,7 +120,7 @@ def dump_dialog(dialog)
         dump_msg = false
       end
 
-      prev_msg_id = MsgId.new(msg['id']) if msg['id']
+      prev_msg_id = msg_id
       cur_progress.update(msg)
 
       if msg['text'] && filter_regex && filter_regex =~ msg['text']

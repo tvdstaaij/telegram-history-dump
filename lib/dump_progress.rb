@@ -9,7 +9,7 @@ class DumpProgress
   attr_writer :dumper_state
 
   def initialize(newest_id = nil, newest_date = nil, dumper_state = {})
-    @newest_id = newest_id ? MsgId.new(newest_id) : nil
+    @newest_id = (newest_id.to_s.empty?) ? nil : MsgId.new(newest_id)
     @newest_date = newest_date
     @dumper_state = dumper_state
   end
@@ -35,7 +35,7 @@ class DumpProgress
   end
 
   def update(msg)
-    msg_id = msg['id'] ? MsgId.new(msg['id']) : nil
+    msg_id = (msg['id'].to_s.empty?) ? nil : MsgId.new(msg['id'])
     if msg_id && (!@newest_id || msg_id > @newest_id)
       @newest_id = msg_id
       @newest_date = msg['date'] || @newest_date
