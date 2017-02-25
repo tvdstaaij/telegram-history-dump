@@ -70,25 +70,30 @@ def dump_dialog(dialog)
               ])
     msg_chunk = nil
     retry_count = 0
-    while retry_count <= $config['chunk_retry'] do
+    loop do
+      if retry_count >= $config['chunk_retry']
+        $log.error('Failed to fetch chunk of %d messages from offset %d '\
+                   'after retrying %d times. Dump of "%s" is incomplete.' % [
+                     $config['chunk_size'], cur_offset,
+                     retry_count, dialog['print_name']
+                   ])
+        msg_chunk = []
+        offset += $config['chunk_size']
+        break
+      end
       begin
         Timeout::timeout($config['chunk_timeout']) do
           msg_chunk = exec_tg_command('history', dialog['print_name'],
                                       $config['chunk_size'], cur_offset)
         end
-        break
-      rescue Timeout::Error
-        if retry_count == $config['chunk_retry']
-          $log.error('Failed to fetch chunk of %d messages from offset %d '\
-                     'after retrying %d times. Dump of "%s" is incomplete.' % [
-                       $config['chunk_size'], cur_offset,
-                       retry_count, dialog['print_name']
-                     ])
-          msg_chunk = []
-          offset += $config['chunk_size']
+        if msg_chunk.is_a?(Array)
           break
         end
-        $log.error('Timeout, retrying... (%d/%d)' % [
+        $log.warn('telegram-cli returned a non array chunk, retrying... (%d/%d)' % [
+          retry_count += 1, $config['chunk_retry']
+        ])
+      rescue Timeout::Error
+        $log.warn('Timeout, retrying... (%d/%d)' % [
           retry_count += 1, $config['chunk_retry']
         ])
       end
@@ -155,15 +160,18 @@ def process_media(dialog, msg)
     next unless $config['download_media'][media_type]
     next unless msg['media']['type'] == media_type
     response = nil
-    Timeout::timeout($config['media_timeout']) do
-      begin
+    begin
+      Timeout::timeout($config['media_timeout']) do
         response = exec_tg_command('load_' + media_type, msg['id'])
-      rescue StandardError => e
-        $log.error('Failed to download media file: %s' % e)
-        return
       end
+    rescue StandardError => e
+      # This is a warning because we're going to log an error afterwards
+      $log.warn('Failed to download media file: %s' % e)
     end
     filename = case
+      when response.nil? || !response.is_a?(Hash)
+        $log.error('Wrong response on media download for message id %s' % msg['id'])
+        nil
       when $config['copy_media']
         filename = File.basename(response['result'])
         destination = File.join(get_media_dir(dialog), fix_media_ext(filename))
@@ -177,7 +185,7 @@ def process_media(dialog, msg)
     rescue StandardError => e
       $log.error('Failed to delete media file: %s' % e)
     end
-    msg['media']['file'] = filename if filename
+    msg['media']['file'] = filename
   end
 end
 
@@ -246,6 +254,7 @@ $config = YAML.load_file(
   cli_opts.cfgfile ||
   File.expand_path('../config.yaml', __FILE__)
 )
+STDOUT.sync = true
 $log = Logger.new(STDOUT)
 
 if $config['track_progress'] && system_big_endian?

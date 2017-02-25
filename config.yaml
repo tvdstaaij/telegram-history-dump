@@ -123,9 +123,8 @@
   chunk_retry: 3
 
   # Time in seconds to wait before considering a download stuck (0 = infinite)
-  # This setting is not very useful at the moment, it just skips to the next
-  # dialog if downloading a media file takes too long
-  media_timeout: 0
+  # After this time the script skips to the next message
+  media_timeout: 100
 
 
   ## Advanced behavior settings ##
