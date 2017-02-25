@@ -24,11 +24,14 @@ def connect_socket
   return if defined?($sock) && $sock
 
   if $config['tg_sock']
-    $log.info('Attaching to telegram-cli control socket at /var/run/telegram.sock')
+    $log.info('Attaching to telegram-cli control socket at %s' % [
+      $config['tg_sock']
+    ])
     $sock = UNIXSocket.new($config['tg_sock'])
   else
-    $log.info('Attaching to telegram-cli control socket at %s:%d' %
-                [$config['tg_host'], $config['tg_port']])
+    $log.info('Attaching to telegram-cli control socket at %s:%d' % [
+      $config['tg_host'], $config['tg_port']
+    ])
     $sock = TCPSocket.open($config['tg_host'], $config['tg_port'])
   end
 end
