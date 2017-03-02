@@ -1,34 +1,48 @@
-require 'fileutils'
-require_relative 'dumper_interface'
+require 'json'
+require 'tempfile'
+require_relative 'dumper_base'
 
-class SingleFileLineDumper < DumperInterface
+class JsonLinesDumper < DumperBase
+  OUTPUT_SUBDIR = 'json'
+  FILE_EXTENSION = '.jsonl'
 
   def start_dialog(dialog, progress)
-    @prepender = nil
-    @rename_to = nil
-    @output_dir = File.join(get_backup_dir, get_output_type)
+    @progress = progress
+    @chunk_buffer = []
+    @output_dir = File.join(get_backup_dir, OUTPUT_SUBDIR)
     @state = progress.dumper_state ? progress.dumper_state.clone : {}
     output_basename = $config['friendly_data_filenames'] == false ?
       dialog['id'].to_s : get_safe_name(dialog['print_name'])
-    output_filename = output_basename + get_file_extension
+    output_filename = output_basename + FILE_EXTENSION
     @current_outfile = @state['outfile']
     if @current_outfile
-      current_basename = File.basename(@current_outfile, get_file_extension)
+      current_basename = File.basename(@current_outfile, FILE_EXTENSION)
       @rename_to = output_filename if current_basename != output_basename
       @current_outfile = File.join(get_backup_dir, @current_outfile)
-      @prepender = DumpPrepender.new(@current_outfile)
     else
       FileUtils.mkdir_p(@output_dir)
       @current_outfile = File.join(@output_dir, output_filename)
       @state['outfile'] = relativize_output_path(@current_outfile)
     end
-    @stream = File.open(@current_outfile, 'w:UTF-8')
+  end
+
+  def dump_chunk(dialog, messages)
+    tmpfile_prefix = "telegram-history-dump[chunk#{@chunk_buffer.length}]"
+    tmpfile = Tempfile.new(tmpfile_prefix, :encoding => 'UTF-8')
+    @chunk_buffer.push(tmpfile)
+    messages.each { |msg| tmpfile.puts(JSON.generate(msg)) }
   end
 
   def end_dialog(dialog)
-    @stream.close
-    @stream = nil
-    @prepender.merge if @prepender
+    File.open(@current_outfile, 'a:UTF-8') do |outstream|
+      @chunk_buffer.reverse_each do |f|
+        f.rewind
+        IO.copy_stream(f, outstream)
+        f.close!
+      end
+    end
+    @chunk_buffer = nil
+
     if @rename_to && $config['update_data_filenames']
       new_outfile = File.join(@output_dir, @rename_to)
       begin
@@ -42,10 +56,6 @@ class SingleFileLineDumper < DumperInterface
       end
     end
     @state
-  end
-
-  def get_file_extension
-    raise 'get_file_extension must be implemented'
   end
 
 end

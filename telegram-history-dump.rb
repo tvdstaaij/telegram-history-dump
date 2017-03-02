@@ -6,9 +6,9 @@ require 'logger'
 require 'socket'
 require 'timeout'
 require 'yaml'
-require_relative 'dumpers/json'
 require_relative 'formatters/lib/formatter_base'
 require_relative 'lib/cli_parser'
+require_relative 'lib/json_lines_dumper'
 require_relative 'lib/dump_progress'
 require_relative 'lib/util'
 require_relative 'lib/tg_def'
@@ -103,15 +103,15 @@ def dump_dialog(dialog)
     end
     raise 'Expected array' unless msg_chunk.is_a?(Array)
 
+    fresh_messages = []
     msg_chunk.reverse_each do |msg|
-      dump_msg = true
+      offset += 1
+
       if msg['id'].to_s.empty?
         $log.warn('Dropping message without id: %s' % msg)
-        dump_msg = false
-        msg_id = nil
-      else
-        msg_id = MsgId.new(msg['id'])
+        next
       end
+      msg_id = MsgId.new(msg['id'])
       if msg_id && prev_msg_id && msg_id >= prev_msg_id
         $log.warn('Message ids are not sequential (%s[%s] -> %s[%s])' % [
           prev_msg_id.raw_hex, prev_msg_id.sequence_hex,
@@ -120,35 +120,33 @@ def dump_dialog(dialog)
       end
       unless msg['date']
         $log.warn('Dropping message without date: %s' % msg)
-        dump_msg = false
+        next
       end
 
       prev_msg_id = msg_id
       cur_progress.update(msg)
 
-      if msg['text'] && filter_regex && filter_regex =~ msg['text']
-        dump_msg = false
-      end
-
       unless $dumper.msg_fresh?(msg, old_progress)
-        if keep_dumping
-          $log.info('Reached end of new messages since last backup')
-        end
-        dump_msg = false
-        keep_dumping = false
-      end
-
-      if dump_msg
-        process_media(dialog, msg)
-        if $dumper.dump_msg(dialog, msg) == false
-          keep_dumping = false
-        end
-      end
-
-      offset += 1
-      if $config['backlog_limit'] > 0 && offset >= $config['backlog_limit']
+        $log.info('Reached end of new messages since last backup')
         keep_dumping = false
         break
+      end
+
+      next if msg['text'] && filter_regex && filter_regex =~ msg['text']
+
+      fresh_messages.unshift(msg)
+
+      if $config['backlog_limit'] > 0 && offset >= $config['backlog_limit']
+        $log.info('Reached backlog_limit')
+        keep_dumping = false
+        break
+      end
+    end
+
+    fresh_messages.each { |msg| process_media(dialog, msg) }
+    unless fresh_messages.empty?
+      if $dumper.dump_chunk(dialog, fresh_messages) == false
+        keep_dumping = false
       end
     end
 
@@ -277,7 +275,7 @@ end
 
 FileUtils.mkdir_p(get_backup_dir)
 
-$dumper = JsonDumper.new
+$dumper = JsonLinesDumper.new
 $progress = {}
 $progress_snapshot = {}
 if $config['track_progress']

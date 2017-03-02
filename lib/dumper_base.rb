@@ -1,17 +1,6 @@
-require_relative '../../lib/util'
+require_relative 'util'
 
-# To implement a dumper:
-# * Create a .rb file named after the dumper in 'dumpers'
-# * Require this file: require_relative 'lib/dumper_interface'
-# * Declare a class SomeDumper, inheriting from DumperInterface
-# * Implement one or more of the functions listed below (at least dump_msg)
-
-# Note:
-#   Dumpers are a low-level construct and as of v2.0.0 they are no longer used
-#   for implementing custom output formats. Instead, custom formatters have been
-#   introduced for this purpose (see /formatters/lib/formatter_base.rb).
-
-class DumperInterface
+class DumperBase
 
   # Will be called before backing up the first dialog
   # Can be used for initialization
@@ -34,13 +23,13 @@ class DumperInterface
     !progress.newest_id || MsgId.new(msg['id']) > progress.newest_id
   end
 
-  # Will be called for each message to dump (from newest to oldest)
+  # Will be called for each chunk of messages (from newest to oldest)
   # See the python binding documentation to get an idea of the msg attributes:
   # https://github.com/vysheng/tg/blob/master/README-PY.md#attributes-1
   # Returning boolean false causes an early abort (skips to the next dialog)
-  def dump_msg(dialog, msg)
-    # dialog, msg: Hash
-    raise 'dump_msg must be implemented'
+  def dump_chunk(dialog, messages)
+    # dialog: Hash, messages: Array of Hash
+    raise 'dump_chunk must be implemented'
   end
 
   # Will be called just after dumping a dialog's messages
