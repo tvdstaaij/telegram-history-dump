@@ -4,6 +4,7 @@ require 'fileutils'
 require 'json'
 require 'logger'
 require 'socket'
+require 'time'
 require 'timeout'
 require 'yaml'
 require_relative 'formatters/lib/formatter_base'
@@ -73,6 +74,7 @@ def dump_dialog(dialog)
               ])
     msg_chunk = nil
     retry_count = 0
+    last_chunk_download_time = Time.now
     loop do
       if retry_count >= $config['chunk_retry']
         $log.error('Failed to fetch chunk of %d messages from offset %d '\
@@ -84,6 +86,7 @@ def dump_dialog(dialog)
         offset += $config['chunk_size']
         break
       end
+      last_chunk_download_time = Time.now
       begin
         Timeout::timeout($config['chunk_timeout']) do
           msg_chunk = exec_tg_command('history', dialog['print_name'],
@@ -146,7 +149,11 @@ def dump_dialog(dialog)
     fresh_messages.each { |msg| cur_progress.update(msg) }
 
     keep_dumping = false if offset < cur_offset + $config['chunk_size']
-    sleep($config['chunk_delay']) if keep_dumping
+    if keep_dumping
+      time_to_sleep = last_chunk_download_time - Time.now +
+                      $config['chunk_delay']
+      sleep(time_to_sleep) if time_to_sleep > 0
+    end
   end
   state = $dumper.end_dialog(dialog) || {}
   cur_progress.dumper_state=(state)
