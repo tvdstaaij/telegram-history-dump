@@ -58,4 +58,8 @@ class JsonLinesDumper < DumperBase
     @state
   end
 
+  def get_output_type
+    'json_lines'
+  end
+
 end
