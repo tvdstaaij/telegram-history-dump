@@ -5,12 +5,14 @@ class PisgFormatter < DailyFileFormatter
 
   NAME = 'pisg'
 
-  def start_dialog(dialog)
+  def start_dialog(dialog, progress)
+    super
     @users = {}
     @oldest_message_date = nil
   end
 
-  def end_dialog(dialog)
+  def end_dialog(dialog, progress)
+    super
     user_names = {}
     @users.each do |user_id, user|
       name = get_safe_name(get_full_name(user))
@@ -37,7 +39,7 @@ class PisgFormatter < DailyFileFormatter
     end
   end
 
-  def format_message(dialog, message, output_stream)
+  def format_message_to_stream(dialog, message, stream)
     involved_users = []
     involved_users << message['from'] if message['from']
     if message['to'] && message['to']['peer_type'] == 'user'
@@ -56,11 +58,11 @@ class PisgFormatter < DailyFileFormatter
     lines = message['text'].to_s.split("\n")
     lines.push('') if lines.empty?
     lines.reverse_each do |message_line|
-      dump_message_line(message, message_line, output_stream)
+      dump_message_line(message, message_line, stream)
     end
   end
 
-  def dump_message_line(message, message_line, output_stream)
+  def dump_message_line(message, message_line, stream)
     date_str = Time.at(message['date']).strftime('[%H:%M:%S] ')
     user_ref = 'u' + message['from']['peer_id'].to_s
 
@@ -91,7 +93,7 @@ class PisgFormatter < DailyFileFormatter
       else nil
     end
 
-    output_stream.puts(date_str + line) if line
+    stream.puts(date_str + line) if line
   end
 
   def get_filename_for_date(dialog, date)

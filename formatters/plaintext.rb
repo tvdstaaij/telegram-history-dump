@@ -4,7 +4,7 @@ class PlaintextFormatter < DailyFileFormatter
 
   NAME = 'plaintext'
 
-  def format_message(dialog, message, output_stream)
+  def format_message_to_stream(dialog, message, output_stream)
     date_str = Time.at(message['date']).strftime('[%s] ' % @options['date_format'])
     from_name = get_full_name(message['from'])
     from_name = '(Unknown)' if from_name.empty?
@@ -15,7 +15,8 @@ class PlaintextFormatter < DailyFileFormatter
         if !fwd_from_name.empty?
           from_name += ' (forwarded from %s)' % fwd_from_name
         elsif message['reply_id']
-          reply_target = find_earlier_message(message['reply_id'])
+          #reply_target = find_earlier_message(message['reply_id'])
+          reply_target = nil # TODO: make this work again
           if reply_target
             reply_name = get_full_name(reply_target['from'])
             from_name += ' (in reply to %s)' %

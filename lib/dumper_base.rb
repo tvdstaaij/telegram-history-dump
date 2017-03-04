@@ -26,7 +26,7 @@ class DumperBase
   # Will be called for each chunk of messages (from newest to oldest)
   # See the python binding documentation to get an idea of the msg attributes:
   # https://github.com/vysheng/tg/blob/master/README-PY.md#attributes-1
-  # Returning boolean false causes an early abort (skips to the next dialog)
+  # The dumper *must* dump all messages; filtering is done in an earlier phase
   def dump_chunk(dialog, messages)
     # dialog: Hash, messages: Array of Hash
     raise 'dump_chunk must be implemented'

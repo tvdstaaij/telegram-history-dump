@@ -5,35 +5,54 @@ require_relative '../../lib/util'
 # * Require this file (require_relative 'lib/formatter_base')
 # * Declare a class named UsefulFormatter inheriting from FormatterBase
 # * Inside the class, override the name: NAME = 'useful'
-# * Implement format_dialog and optionally start_backup/end_backup
+# * Implement format_dialog and optionally the start/end methods
 # * Add an entry for the formatter in config.yaml so it can be enabled
 
 class FormatterBase
 
   # The methods/properties below are intended to be overridden, although only
-  # NAME and format_dialog are mandatory
+  # NAME and format_message are mandatory
+  #
+  # Notes:
+  # * Arguments are passed by reference and MUST NOT be modified
+  # * If something goes horribly wrong, log an error and return false to abort
 
   # Canonical name of the formatter, should match the filename and class name
   # Will be used to determine the output directory (output/formatted/<name>)
   NAME = ''
 
   # Will be called before formatting the first dialog
-  # Can be used for initialization
   def start_backup(dialogs)
     # dialogs: Array of Hash
     nil
   end
 
-  # Called once for every downloaded dialog
-  # Message array is in reverse chronological order
-  def format_dialog(dialog, messages)
-    # dialog: Hash, messages: Array of Hash
-    raise 'format_dialog must be implemented'
+  # Will be called before the first format_message call of a dialog
+  def start_dialog(dialog, progress)
+    # dialog: Hash, progress: DumpProgress
+    nil
+  end
+
+  # Will be called once for every message in a dialog,
+  # between the start_dialog and end_dialog calls
+  # dialog and progress arguments are the same as in start_dialog
+  # See tg python binding documentation to get an idea of the msg attributes:
+  # https://github.com/vysheng/tg/blob/master/README-PY.md#attributes-1
+  def format_message(dialog, progress, msg)
+    # dialog: Hash, progress: DumpProgress, msg: Hash
+    raise 'format_message must be implemented'
+  end
+
+  # Will be called after the last format_message call of a dialog
+  # dialog and progress arguments are the same as in start_dialog
+  def end_dialog(dialog, progress)
+    # dialog: Hash, progress: DumpProgress
+    nil
   end
 
   # Will be called after formatting the last dialog
-  # Can be used for cleanup
-  def end_backup
+  def end_backup(dialogs)
+    # dialogs: Array of Hash
     nil
   end
 

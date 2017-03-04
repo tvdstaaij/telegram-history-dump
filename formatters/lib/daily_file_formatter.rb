@@ -9,58 +9,51 @@ class DailyFileFormatter < FormatterBase
     FileUtils.mkdir_p(output_dir)
   end
 
-  def format_dialog(dialog, messages)
-    prev_date = nil
-    output_stream = nil
+  # Must call `super` if overridden
+  def start_dialog(dialog, progress)
+    @prev_date = nil
+    @stream = nil
     safe_name = get_safe_name(dialog['print_name'])
     @dialog_dir = File.join(output_dir, safe_name)
     FileUtils.mkdir_p(@dialog_dir)
+  end
 
-    @messages = messages
-    start_dialog(dialog)
-    (0...messages.length).reverse_each do |i|
-      message = messages[@msg_index = i]
-      date = message['date']
-      next unless date
-      date = Time.at(date).to_date
-      unless output_stream && date == prev_date
-        output_stream.close if output_stream
-        filename = get_filename_for_date(dialog, date)
-        path = File.join(@dialog_dir, filename)
-        begin
-          output_stream = File.open(path, 'w:UTF-8')
-        rescue StandardError => e
-          $log.error('Failed to open output file: %s' % e)
-          return
-        end
+  def format_message(dialog, progress, message)
+    date = message['date']
+    return unless date
+    date = Time.at(date).to_date
+    unless @stream && date == @prev_date
+      @stream.close if @stream
+      filename = get_filename_for_date(dialog, date)
+      path = File.join(@dialog_dir, filename)
+      begin
+        @stream = File.open(path, 'w:UTF-8')
+      rescue StandardError => e
+        $log.error('Failed to open output file: %s' % e)
+        return false
       end
-      format_message(dialog, message, output_stream)
-      prev_date = date
     end
-    end_dialog(dialog)
+    begin
+      format_message_to_stream(dialog, message, @stream)
+    rescue StandardError => e
+      $log.error('Failed to format message: %s' % e)
+      return false
+    end
+    @prev_date = date
   end
 
-  def start_dialog(dialog)
-    nil
+  # Must call `super` if overridden
+  def end_dialog(dialog, progress)
+    @stream.close if @stream
+    @stream = nil
   end
 
-  def end_dialog(dialog)
-    nil
-  end
-
-  def format_message(dialog, message, output_stream)
-    raise 'format_message must be implemented'
+  def format_message_to_stream(dialog, message, stream)
+    raise 'format_message_to_stream must be implemented'
   end
 
   def get_filename_for_date(dialog, date)
     raise 'get_filename_for_date must be implemented'
-  end
-
-  def find_earlier_message(id)
-    (@msg_index...@messages.length).each do |i|
-      return @messages[i] if @messages[i]['id'] == id
-    end
-    nil
   end
 
 end

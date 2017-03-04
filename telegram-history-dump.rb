@@ -118,13 +118,11 @@ def dump_dialog(dialog)
           msg_id.raw_hex, msg_id.sequence_hex,
         ])
       end
+      prev_msg_id = msg_id
       unless msg['date']
         $log.warn('Dropping message without date: %s' % msg)
         next
       end
-
-      prev_msg_id = msg_id
-      cur_progress.update(msg)
 
       unless $dumper.msg_fresh?(msg, old_progress)
         $log.info('Reached end of new messages since last backup')
@@ -144,11 +142,8 @@ def dump_dialog(dialog)
     end
 
     fresh_messages.each { |msg| process_media(dialog, msg) }
-    unless fresh_messages.empty?
-      if $dumper.dump_chunk(dialog, fresh_messages) == false
-        keep_dumping = false
-      end
-    end
+    $dumper.dump_chunk(dialog, fresh_messages) unless fresh_messages.empty?
+    fresh_messages.each { |msg| cur_progress.update(msg) }
 
     keep_dumping = false if offset < cur_offset + $config['chunk_size']
     sleep($config['chunk_delay']) if keep_dumping
@@ -366,22 +361,28 @@ $dumper.end_backup
 
 unless enabled_formatters.empty?
   $log.info('Formatting messages')
-  enabled_formatters.each do |formatter|
-    formatter.start_backup(backup_list)
+  enabled_formatters.reject! do |formatter|
+    formatter.start_backup(backup_list) == false
   end
   backup_list.each do |dialog|
-    dumper_outfile = $progress[dialog['id'].to_s].dumper_state['outfile']
-    json_file = File.join(get_backup_dir, dumper_outfile)
-    messages = []
-    File.open(json_file, 'r:UTF-8').each do |line|
-      messages.push(JSON.parse(line))
+    progress = $progress[dialog['id'].to_s]
+    next unless progress
+    enabled_formatters.reject! do |formatter|
+      formatter.start_dialog(dialog, progress) == false
     end
-    enabled_formatters.each do |formatter|
-      formatter.format_dialog(dialog, messages)
+    dumper_outfile = progress.dumper_state['outfile']
+    json_file = File.join(get_backup_dir, dumper_outfile)
+    File.open(json_file, 'r:UTF-8').each do |line|
+      enabled_formatters.reject! do |formatter|
+        formatter.format_message(dialog, progress, JSON.parse(line)) == false
+      end
+    end
+    enabled_formatters.reject! do |formatter|
+      formatter.end_dialog(dialog, progress) == false
     end
   end
   enabled_formatters.each do |formatter|
-    formatter.end_backup
+    formatter.end_backup(backup_list)
   end
 end
 
