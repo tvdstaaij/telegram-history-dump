@@ -7,17 +7,13 @@ require 'socket'
 require 'time'
 require 'timeout'
 require 'yaml'
-require_relative 'formatters/lib/formatter_base'
 require_relative 'lib/cli_parser'
 require_relative 'lib/json_lines_dumper'
+require_relative 'lib/formatter_runner'
 require_relative 'lib/dump_progress'
 require_relative 'lib/util'
 require_relative 'lib/tg_def'
 require_relative 'lib/msg_id'
-
-Dir[File.dirname(__FILE__) + '/formatters/*.rb'].each do |file|
-  require File.expand_path(file)
-end
 
 cli_opts = CliParser.parse(ARGV)
 
@@ -296,20 +292,6 @@ if $config['track_progress']
   end
 end
 
-formatter_classes = {}
-enabled_formatters = []
-FormatterBase.descendants.each do |formatter_class|
-  unless formatter_class::NAME.empty?
-    formatter_classes[formatter_class::NAME] = formatter_class
-  end
-end
-($config['formatters'] || {}).each do |name,options|
-  unless formatter_classes.key?(name)
-    raise 'Formatter "%s" is enabled but does not exist' % [name]
-  end
-  enabled_formatters.push(formatter_classes[name].new(options || {}))
-end
-
 connect_socket
 
 dialogs = exec_tg_command('dialog_list', $config['maximum_dialogs'])
@@ -366,32 +348,8 @@ backup_list.each_with_index do |dialog,i|
 end
 $dumper.end_backup
 
-unless enabled_formatters.empty?
-  $log.info('Formatting messages')
-  enabled_formatters.reject! do |formatter|
-    formatter.start_backup(backup_list) == false
-  end
-  backup_list.each do |dialog|
-    progress = $progress[dialog['id'].to_s]
-    next unless progress
-    enabled_formatters.reject! do |formatter|
-      formatter.start_dialog(dialog, progress) == false
-    end
-    dumper_outfile = progress.dumper_state['outfile']
-    json_file = File.join(get_backup_dir, dumper_outfile)
-    File.open(json_file, 'r:UTF-8').each do |line|
-      enabled_formatters.reject! do |formatter|
-        formatter.format_message(dialog, progress, JSON.parse(line)) == false
-      end
-    end
-    enabled_formatters.reject! do |formatter|
-      formatter.end_dialog(dialog, progress) == false
-    end
-  end
-  enabled_formatters.each do |formatter|
-    formatter.end_backup(backup_list)
-  end
-end
+$log.info('Formatting messages')
+FormatterRunner.new($dumper, $progress).format(backup_list)
 
 if cli_opts.kill_tg
   connect_socket
