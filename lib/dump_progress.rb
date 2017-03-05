@@ -20,7 +20,7 @@ class DumpProgress
   def self.from_hash(hash)
     self.new(
       hash['newest_id'],
-      hash['newest_date'] || hash['last_date'], # last_date is v2.0.x compat
+      hash['newest_date'],
       hash['dumper_state'],
       hash['counts']
     )
