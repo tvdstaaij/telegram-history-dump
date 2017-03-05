@@ -121,3 +121,7 @@ body {
   padding-top: 15px;
 }
 
+.fwd-name {
+  font-style: normal;
+  font-weight: bold;
+}
