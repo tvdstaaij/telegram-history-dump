@@ -15,15 +15,10 @@ class PlaintextFormatter < DailyFileFormatter
         if !fwd_from_name.empty?
           from_name += ' (forwarded from %s)' % fwd_from_name
         elsif message['reply_id']
-          #reply_target = find_earlier_message(message['reply_id'])
-          reply_target = nil # TODO: make this work again
-          if reply_target
-            reply_name = get_full_name(reply_target['from'])
-            from_name += ' (in reply to %s)' %
-              [reply_name.to_s.empty? ? 'someone' : reply_name]
-          else
-            from_name += ' (reply)'
-          end
+          reply_target = message['reply_msg']
+          reply_name = reply_target ? get_full_name(reply_target['from']) : nil
+          from_name += ' (in reply to %s)' %
+            [reply_name.to_s.empty? ? 'someone' : reply_name]
         end
 
         content = case
