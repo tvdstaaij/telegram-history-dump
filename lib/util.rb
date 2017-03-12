@@ -7,12 +7,16 @@ def get_safe_name(name)
 end
 
 def get_full_name(user)
-  return '' if !user || user['first_name'].to_s == ''
-  name = user['first_name']
-  if $config['display_last_name'] && user['last_name'].to_s != ''
-    name += ' %s' % user['last_name']
+  if !user['first_name'].to_s.empty?
+    name = user['first_name']
+    if $config['display_last_name'] && user['last_name'].to_s != ''
+      name += ' %s' % user['last_name']
+    end
+    return name
+  elsif !user['title'].to_s.empty?
+    return user['title']
   end
-  name
+  return ''
 end
 
 def get_backup_dir

@@ -65,7 +65,7 @@ class HtmlFormatter < FormatterBase
   def format_message(dialog, progress, msg)
     if not msg['out'] and dialog['type'] != 'user'
       # If this is an incoming message in a group chat, display the author
-      author = '<div class=author>%s:</div>'% get_full_name(msg['from'])
+      author = CGI::escapeHTML(get_full_name(msg['from']))
     else
       author = ''
     end
@@ -83,6 +83,7 @@ class HtmlFormatter < FormatterBase
     end
 
     msg_body = ''
+    author_newline = false
     if msg['text']
       msg_body = replace_urls(msg['text']).gsub("\n", '<br>')
       if msg['media'] and msg['media']['type'] == 'webpage' and msg['media']['description']
@@ -100,7 +101,6 @@ class HtmlFormatter < FormatterBase
         end
         msg_body += '<div class="webpage">%s%s</div>' % [title, description]
       end
-      author += ' ' if author != '' # In text messages (unlike media), author is followed by a space, not a new line
     elsif msg['media'] and msg['media']['file']
       relative_url = URI.escape(File.join("../../media", @safe_name, File.basename(msg['media']['file'])))
       extension = File.extname(msg['media']['file'])
@@ -128,7 +128,7 @@ class HtmlFormatter < FormatterBase
           msg_body += ">Your browser does not support inline playback.</#{filetype}><br><a href='#{relative_url}'>Download #{filetype}</a>"
         end
       end
-      author += '<br>' if author != '' # In file messages (unlike text messages), author is followed by a new line
+      author_newline = true
     elsif msg['media'] and msg['media']['type'] == 'geo'
       lat = msg['media']['latitude'].to_s
       lon = msg['media']['longitude'].to_s
@@ -179,6 +179,15 @@ class HtmlFormatter < FormatterBase
     end
     if msg_body != ''
       in_out = (msg['out'] ? 'out' : 'in')
+      fwd_from_name = msg['fwd_from'] ? CGI::escapeHTML(get_full_name(msg['fwd_from'])) : nil
+      if fwd_from_name
+        author_newline = true
+        leadin = if author.empty? then 'F' else ' f' end
+        fwd_from_text = if fwd_from_name.empty? then '' else " from <span class=\"fwd-name\">#{fwd_from_name}</span>" end
+        author += "#{leadin}orwarded message#{fwd_from_text}"
+      end
+      author_suffix = if author_newline then '<br>' else ' ' end
+      author = "<div class=\"author\">#{author}:</div>#{author_suffix}" unless author.empty?
       @backup_file.puts("<div class='msg #{in_out}' title='#{date}'>#{author}#{msg_body}</div>")
     end
 
