@@ -121,7 +121,12 @@ body {
   padding-top: 15px;
 }
 
-.fwd-name {
-  font-style: normal;
+.fwd-name, .reply-name {
   font-weight: bold;
+}
+
+:target {
+  border-width: 2px;
+  border-style: dashed;
+  border-color: #ffab16;
 }

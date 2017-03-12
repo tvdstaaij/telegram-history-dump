@@ -55,9 +55,9 @@ class HtmlFormatter < FormatterBase
     end
     @safe_name = get_safe_name(dialog['print_name'])
     @escaped_name = CGI::escapeHTML(URI.escape(@safe_name))
-    current_filename = File.join(output_dir, @safe_name + '-0.html')
+    @page_filename = @safe_name + '-0.html'
 
-    @backup_file = File.open(current_filename, 'w:UTF-8')
+    @backup_file = File.open(File.join(output_dir, @page_filename), 'w:UTF-8')
     @navigation = pagination(@escaped_name, @page_count, @total_message_count)
     @backup_file.puts(@html_template_header % [@html_title, @navigation, @dialog_title])
   end
@@ -99,7 +99,7 @@ class HtmlFormatter < FormatterBase
         if title.to_s != '' and description.to_s != ''
           title += '<br>'
         end
-        msg_body += '<div class="webpage">%s%s</div>' % [title, description]
+        msg_body += '<div id="%s" class="webpage">%s%s</div>' % [msg['id'], title, description]
       end
     elsif msg['media'] and msg['media']['file']
       relative_url = URI.escape(File.join("../../media", @safe_name, File.basename(msg['media']['file'])))
@@ -132,12 +132,12 @@ class HtmlFormatter < FormatterBase
     elsif msg['media'] and msg['media']['type'] == 'geo'
       lat = msg['media']['latitude'].to_s
       lon = msg['media']['longitude'].to_s
-      msg_body = "<div class=geo>Geo location: <a target='_blank' href='https://www.openstreetmap.org/?mlat=#{lat}&mlon=#{lon}#map=15/#{lat}/#{lon}'>(#{lat[0..8]},#{lon[0..8]})</a></div>"
+      msg_body = "<div id='#{msg['id']}' class='geo'>Geo location: <a target='_blank' href='https://www.openstreetmap.org/?mlat=#{lat}&mlon=#{lon}#map=15/#{lat}/#{lon}'>(#{lat[0..8]},#{lon[0..8]})</a></div>"
     elsif msg['media'] and msg['media']['type'] == 'contact'
       phone = msg['media']['phone']
       first = msg['media']['first_name']
       last = msg['media']['last_name']
-      msg_body = "<div class=contact>Contact: #{first} <!--first-last-->#{last}, +#{phone}</div>"
+      msg_body = "<div id='#{msg['id']}' class='contact'>Contact: #{first} <!--first-last-->#{last}, +#{phone}</div>"
     end
     if msg['event'] == 'service' or msg['service'] or (@timestamps_every > 0 and @message_count % @timestamps_every == 0)
       if @timestamps_every > 0 and @message_count % @timestamps_every == 0
@@ -175,21 +175,29 @@ class HtmlFormatter < FormatterBase
           text += CGI::escapeHTML(msg['action'].to_s)
         end
       end
-      @backup_file.puts("<div class='msg-service' title='#{date}'><div class=inner>#{text}</div></div>") if text != ''
+      @backup_file.puts("<div id='#{msg['id']}' class='msg-service' title='#{date}'><div class=inner>#{text}</div></div>") if text != ''
     end
     if msg_body != ''
       in_out = (msg['out'] ? 'out' : 'in')
       fwd_from_name = msg['fwd_from'] ? CGI::escapeHTML(get_full_name(msg['fwd_from'])) : nil
+      reply_target = msg['reply_msg']
       if fwd_from_name
         author_newline = true
         leadin = if author.empty? then 'F' else ' f' end
         fwd_from_text = if fwd_from_name.empty? then '' else " from <span class=\"fwd-name\">#{fwd_from_name}</span>" end
         author += "#{leadin}orwarded message#{fwd_from_text}"
+      elsif reply_target && reply_target['html_filename']
+        reply_author_name = CGI::escapeHTML(get_full_name(reply_target['from']))
+        author_newline = true
+        leadin = if author.empty? then 'R' else ' r' end
+        reply_author_text = if reply_author_name.empty? then '' else " from <span class=\"reply-name\">#{reply_author_name}</span>" end
+        author += "#{leadin}eplied to <a href='#{reply_target['html_filename']}\##{reply_target['id']}'>message#{reply_author_text}</a>"
       end
       author_suffix = if author_newline then '<br>' else ' ' end
       author = "<div class=\"author\">#{author}:</div>#{author_suffix}" unless author.empty?
-      @backup_file.puts("<div class='msg #{in_out}' title='#{date}'>#{author}#{msg_body}</div>")
+      @backup_file.puts("<div id='#{msg['id']}' class='msg #{in_out}' title='#{date}'>#{author}#{msg_body}</div>")
     end
+    msg['html_filename'] = @page_filename
 
     @message_count += 1
     if @messages_per_page and @messages_per_page > 0 and @message_count >= @messages_per_page
@@ -203,8 +211,8 @@ class HtmlFormatter < FormatterBase
       @message_count = 0
 
       # Open a new file and write the header again
-      current_filename = File.join(output_dir, "%s-%s.html" % [@safe_name, @page_count])
-      @backup_file = File.open(current_filename, 'w:UTF-8')
+      @page_filename = '%s-%s.html' % [@safe_name, @page_count]
+      @backup_file = File.open(File.join(output_dir, @page_filename), 'w:UTF-8')
       @navigation = pagination(@escaped_name, @page_count, @total_message_count)
       @backup_file.puts(@html_template_header % [@html_title, @navigation, @dialog_title + (' - page %i' % (@page_count + 1) if @page_count > 0)])
     end
