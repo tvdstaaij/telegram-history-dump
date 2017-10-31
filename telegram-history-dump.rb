@@ -14,22 +14,47 @@ require_relative 'lib/dump_progress'
 require_relative 'lib/util'
 require_relative 'lib/tg_def'
 require_relative 'lib/msg_id'
+require_relative 'lib/exceptions'
 
-cli_opts = CliParser.parse(ARGV)
+$cli_opts = CliParser.parse(ARGV)
 
 def connect_socket
-  return if defined?($sock) && $sock
-
-  if $config['tg_sock']
-    $log.info('Attaching to telegram-cli control socket at %s' % [
-      $config['tg_sock']
-    ])
-    $sock = UNIXSocket.new($config['tg_sock'])
-  else
-    $log.info('Attaching to telegram-cli control socket at %s:%d' % [
-      $config['tg_host'], $config['tg_port']
-    ])
-    $sock = TCPSocket.open($config['tg_host'], $config['tg_port'])
+  $sock = nil unless defined?($sock)
+  begin
+    Timeout::timeout($cli_opts.conn_timeout || 30) do
+      until $sock
+        begin
+          if $config['tg_sock']
+            $log.info('Attaching to telegram-cli control socket at %s' % [
+              $config['tg_sock']
+            ])
+            $sock = UNIXSocket.new($config['tg_sock'])
+          else
+            $log.info('Attaching to telegram-cli control socket at %s:%d' % [
+              $config['tg_host'], $config['tg_port']
+            ])
+            $sock = TCPSocket.open($config['tg_host'], $config['tg_port'])
+          end
+        rescue StandardError => e
+          $log.error("Failed to attach (\"#{e}\"), retrying in 1s")
+          $sock = nil
+        end
+        if $sock
+          dialogs = exec_tg_command('dialog_list', $config['maximum_dialogs'])
+          channels = exec_tg_command('channel_list', $config['maximum_dialogs'])
+          unless dialogs.is_a?(Array) && channels.is_a?(Array)
+            raise 'Expected array of dialogs and channels'
+          end
+          dialogs = dialogs.concat(channels)
+          raise 'No dialogs found' if dialogs.empty?
+          $dialogs = dialogs
+        else
+          sleep(1)
+        end
+      end
+    end
+  rescue Timeout::Error
+    raise FatalException.new('No connection attempts left, aborting')
   end
 end
 
@@ -39,12 +64,20 @@ def disconnect_socket
 end
 
 def exec_tg_command(command, *arguments)
-  $sock.puts [command].concat(arguments).join(' ')
-  $sock.gets # Skip the response code (undocumented gibberish)
-  json = JSON.parse($sock.gets) # Read the response object
-  $sock.gets # Skip the terminating newline
+  connect_socket
+  command_line = [command].concat(arguments).join(' ')
+  $sock.puts(command_line)
+  begin
+    $sock.readline # Skip the response code (undocumented gibberish)
+    json = JSON.parse($sock.readline) # Read the response object
+    $sock.readline # Skip the empty line
+  rescue EOFError, SystemCallError => e
+    $log.error('Disconnected from socket, will attempt to reconnect')
+    disconnect_socket
+    raise SocketDisconnectedException.new
+  end
   if json.is_a?(Hash) && json['result'] == 'FAIL'
-    raise 'Telegram command <%s> failed: %s' % [command, json]
+    raise 'Telegram command <%s> failed: %s' % [command_line, json]
   end
   json
 end
@@ -96,6 +129,10 @@ def dump_dialog(dialog)
         ])
       rescue Timeout::Error
         $log.warn('Timeout, retrying... (%d/%d)' % [
+          retry_count += 1, $config['chunk_retry']
+        ])
+      rescue SocketDisconnectedException
+        $log.warn('Disconnected, retrying... (%d/%d)' % [
           retry_count += 1, $config['chunk_retry']
         ])
       end
@@ -252,7 +289,7 @@ def save_progress
 end
 
 $config = YAML.load_file(
-  cli_opts.cfgfile ||
+  $cli_opts.cfgfile ||
   File.expand_path('../config.yaml', __FILE__)
 )
 STDOUT.sync = true
@@ -263,12 +300,12 @@ if $config['track_progress'] && system_big_endian?
         'necessary for incremental backups. Please report this as an issue.'
 end
 
-unless cli_opts.userdir.nil? || cli_opts.userdir.empty?
-  $config['backup_dir'] = File.join($config['backup_dir'], cli_opts.userdir)
+unless $cli_opts.userdir.nil? || $cli_opts.userdir.empty?
+  $config['backup_dir'] = File.join($config['backup_dir'], $cli_opts.userdir)
 end
 
-unless cli_opts.backlog_limit.nil? || cli_opts.backlog_limit < 0
-  $config['backlog_limit'] = cli_opts.backlog_limit
+unless $cli_opts.backlog_limit.nil? || $cli_opts.backlog_limit < 0
+  $config['backlog_limit'] = $cli_opts.backlog_limit
 end
 
 FileUtils.mkdir_p(get_backup_dir)
@@ -294,14 +331,9 @@ end
 
 connect_socket
 
-dialogs = exec_tg_command('dialog_list', $config['maximum_dialogs'])
-channels = exec_tg_command('channel_list', $config['maximum_dialogs'])
-raise 'Expected array' unless dialogs.is_a?(Array) && channels.is_a?(Array)
-dialogs = dialogs.concat(channels)
-raise 'No dialogs found' if dialogs.empty?
 backup_list = []
 skip_list = []
-dialogs.each do |dialog|
+$dialogs.each do |dialog|
 
   # Supergroups may have more than one list entry because they are included in
   # both dialog_list and channel_list, so ignore duplicate IDs
@@ -338,12 +370,13 @@ $dumper.start_backup
 backup_list.each_with_index do |dialog,i|
   sleep($config['chunk_delay']) if i > 0
   begin
-    connect_socket
     dump_dialog(dialog)
     save_progress
   rescue Timeout::Error
     $log.error('Unhandled timeout, skipping to next dialog')
     disconnect_socket
+  rescue SocketDisconnectedException
+    $log.error('Unhandled disconnect, skipping to next dialog')
   end
 end
 $dumper.end_backup
@@ -351,7 +384,7 @@ $dumper.end_backup
 $log.info('Formatting messages')
 FormatterRunner.new($dumper, $progress).format(backup_list)
 
-if cli_opts.kill_tg
+if $cli_opts.kill_tg
   connect_socket
   $sock.puts('quit')
 end

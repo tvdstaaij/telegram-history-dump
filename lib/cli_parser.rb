@@ -1,6 +1,8 @@
 require 'optparse'
 
-Options = Struct.new(:cfgfile, :kill_tg, :userdir, :backlog_limit)
+Options = Struct.new(
+  :cfgfile, :kill_tg, :userdir, :backlog_limit, :conn_timeout
+)
 
 class CliParser
   def self.parse(options)
@@ -33,6 +35,12 @@ class CliParser
               'Maximum number of messages to backup',
               'for each target (overrides YAML config)') do |backlog_limit|
         args.backlog_limit = backlog_limit
+      end
+
+      opts.on('-tTIMEOUT', '--conn-timeout=TIMEOUT', Integer,
+              'Number of seconds to attempt a (re)connection',
+              'the telegram-cli control socket') do |conn_timeout|
+        args.conn_timeout = conn_timeout
       end
 
     end
