@@ -230,7 +230,7 @@ def backup_target?(dialog)
 
   return false unless candidates
 
-  $config['blacklist'].each do |blacklisted|
+  ($config['blacklist'] || []).each do |blacklisted|
     next unless blacklisted
     return false if blacklisted.to_s == dialog['id'].to_s
     next unless blacklisted.is_a?(String)

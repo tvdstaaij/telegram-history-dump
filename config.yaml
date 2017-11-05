@@ -29,6 +29,12 @@
     null
   ]
 
+  # Array of (partial) names / peer IDs *not* to backup even if they match
+  # any of the above target selectors
+  blacklist: [
+
+  ]
+
   # By default telegram-cli returns only the first 100 dialogs/channels
   # We increase this to 1000. If you have even more, increase this value
   maximum_dialogs: 1000
