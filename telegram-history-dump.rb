@@ -229,6 +229,18 @@ def backup_target?(dialog)
   end
 
   return false unless candidates
+
+  $config['blacklist'].each do |blacklisted|
+    next unless blacklisted
+    return false if blacklisted.to_s == dialog['id'].to_s
+    next unless blacklisted.is_a?(String)
+    dialog_name = strip_tg_special_chars(dialog['print_name'])
+    dialog_name = get_safe_name(dialog_name).upcase
+    blacklisted_name = strip_tg_special_chars(blacklisted)
+    blacklisted_name = get_safe_name(blacklisted_name).upcase
+    return false if dialog_name.include?(blacklisted_name)
+  end
+
   return true if candidates.empty?
   candidates.each do |candidate|
     next unless candidate
