@@ -70,9 +70,9 @@ class HtmlFormatter < FormatterBase
 
       if msg['date']
         date = Time.at(msg['date'])
-        date_message = date.strftime('%a %Y-%m-%d, %H:%I')
+        date_message = date.strftime('%a %Y-%m-%d, %H:%M')
         if $config['formatters']['html']['use_utc_time']
-          date_message = date.utc.strftime('%a %Y-%m-%d, %H:%I') + " UTC"
+          date_message = date.utc.strftime('%a %Y-%m-%d, %H:%M') + " UTC"
           date = "#{date.utc} UTC"
         end
       else
