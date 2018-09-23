@@ -55,7 +55,7 @@ class PisgFormatter < DailyFileFormatter
     @oldest_message_date ||= Time.at(message['date'])
     lines = message['text'].to_s.split("\n")
     lines.push('') if lines.empty?
-    lines.reverse_each do |message_line|
+    lines.each_entry do |message_line|
       dump_message_line(message, message_line, output_stream)
     end
   end
